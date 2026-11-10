@@ -3,6 +3,7 @@ package com.moudonut.admin.ui
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.moudonut.admin.data.AdminDayBill
+import com.moudonut.admin.data.AggregatedOrderItem
 import com.moudonut.admin.data.BillsRepository
 import com.moudonut.admin.data.StoreSummary
 import com.moudonut.admin.data.SummarySource
@@ -18,6 +19,7 @@ data class SummaryUiState(
     val loading: Boolean = true,
     val summary: StoreSummary? = null,
     val dayBills: List<AdminDayBill> = emptyList(),
+    val dayOrderItems: List<AggregatedOrderItem> = emptyList(),
     val error: String? = null,
     val refreshError: String? = null
 )
@@ -57,11 +59,13 @@ class SummaryViewModel(
             try {
                 val summary = source.summary(date)
                 val bills = source.dayBills(date)
+                val orderItems = source.dayOrderItems(date)
                 if (_state.value.date != date) return@launch
                 _state.update {
                     it.copy(
                         summary = summary,
                         dayBills = bills,
+                        dayOrderItems = orderItems,
                         error = null,
                         refreshError = null
                     )
@@ -81,12 +85,14 @@ class SummaryViewModel(
             try {
                 val summary = source.summary(date)
                 val bills = source.dayBills(date)
+                val orderItems = source.dayOrderItems(date)
                 if (_state.value.date != date) return@launch
                 _state.update {
                     it.copy(
                         loading = false,
                         summary = summary,
                         dayBills = bills,
+                        dayOrderItems = orderItems,
                         error = null
                     )
                 }

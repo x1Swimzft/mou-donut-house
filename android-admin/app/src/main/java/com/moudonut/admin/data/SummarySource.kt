@@ -7,4 +7,5 @@ package com.moudonut.admin.data
 interface SummarySource {
     suspend fun summary(date: String): StoreSummary
     suspend fun dayBills(date: String): List<AdminDayBill>
+    suspend fun dayOrderItems(date: String): List<AggregatedOrderItem>
 }

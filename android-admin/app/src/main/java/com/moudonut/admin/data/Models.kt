@@ -148,6 +148,21 @@ data class AdminProduct(
 )
 
 @Serializable
+data class AggregatedCustomerQty(
+    @SerialName("customer_name") val customerName: String,
+    val qty: Int
+)
+
+@Serializable
+data class AggregatedOrderItem(
+    @SerialName("product_name") val productName: String,
+    @SerialName("unit_price") val unitPrice: Double,
+    @SerialName("total_qty") val totalQty: Int,
+    @SerialName("total_amount") val totalAmount: Double,
+    @SerialName("customer_breakdown") val customerBreakdown: List<AggregatedCustomerQty> = emptyList()
+)
+
+@Serializable
 data class ToggledProduct(
     @SerialName("product_id") val productId: String,
     val name: String? = null,

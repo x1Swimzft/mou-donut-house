@@ -178,7 +178,14 @@ private fun MainNav() {
                 BillDetailScreen(id = id, onBack = { nav.popBackStack() })
             }
             composable("summary") {
-                SummaryScreen(onOpenBill = { id -> nav.navigate("bill/$id") })
+                SummaryScreen(
+                    onOpenBill = { id -> nav.navigate("bill/$id") },
+                    onOpenCombined = { date -> nav.navigate("summary/combined/$date") }
+                )
+            }
+            composable("summary/combined/{date}") { entry ->
+                val date = entry.arguments?.getString("date").orEmpty()
+                CombinedOrdersScreen(date = date, onBack = { nav.popBackStack() })
             }
             composable("customers") {
                 CustomersScreen()

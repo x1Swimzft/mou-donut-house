@@ -33,6 +33,7 @@ class SummaryViewModelTest {
     private class FakeSource : SummarySource {
         var summaryCalls = 0
         var dayBillsCalls = 0
+        var dayOrderItemsCalls = 0
 
         override suspend fun summary(date: String): StoreSummary {
             summaryCalls++
@@ -41,6 +42,11 @@ class SummaryViewModelTest {
 
         override suspend fun dayBills(date: String): List<AdminDayBill> {
             dayBillsCalls++
+            return emptyList()
+        }
+
+        override suspend fun dayOrderItems(date: String): List<com.moudonut.admin.data.AggregatedOrderItem> {
+            dayOrderItemsCalls++
             return emptyList()
         }
     }
@@ -55,6 +61,7 @@ class SummaryViewModelTest {
 
         assertEquals(1, source.summaryCalls)
         assertEquals(1, source.dayBillsCalls)
+        assertEquals(1, source.dayOrderItemsCalls)
     }
 
     @Test
@@ -68,5 +75,6 @@ class SummaryViewModelTest {
 
         assertEquals(2, source.summaryCalls)
         assertEquals(2, source.dayBillsCalls)
+        assertEquals(2, source.dayOrderItemsCalls)
     }
 }

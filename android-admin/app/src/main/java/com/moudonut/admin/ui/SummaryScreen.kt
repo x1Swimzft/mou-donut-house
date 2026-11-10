@@ -13,10 +13,12 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -29,6 +31,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.moudonut.admin.data.AdminDayBill
+import com.moudonut.admin.data.AggregatedOrderItem
 import com.moudonut.admin.data.StoreSummary
 import com.moudonut.admin.util.formatMoney
 import com.moudonut.admin.util.shiftDate
@@ -36,7 +39,10 @@ import com.moudonut.admin.util.todayBangkok
 import com.moudonut.admin.data.moneyEquals
 
 @Composable
-fun SummaryScreen(onOpenBill: (String) -> Unit) {
+fun SummaryScreen(
+    onOpenBill: (String) -> Unit,
+    onOpenCombined: (String) -> Unit = {}
+) {
     val vm: SummaryViewModel = viewModel()
     val state by vm.state.collectAsStateWithLifecycle()
 
@@ -89,7 +95,14 @@ fun SummaryScreen(onOpenBill: (String) -> Unit) {
                     )
                     TextButton(onClick = { vm.refresh() }) { Text("ลองใหม่") }
                 }
-                SummaryContent(summary, state.dayBills, onOpenBill)
+                SummaryContent(
+                    date = state.date,
+                    summary = summary,
+                    dayBills = state.dayBills,
+                    dayOrderItems = state.dayOrderItems,
+                    onOpenBill = onOpenBill,
+                    onOpenCombined = onOpenCombined
+                )
             }
         }
     }
@@ -97,19 +110,38 @@ fun SummaryScreen(onOpenBill: (String) -> Unit) {
 
 @Composable
 private fun ColumnScope.SummaryContent(
+    date: String,
     summary: StoreSummary,
     dayBills: List<AdminDayBill>,
-    onOpenBill: (String) -> Unit
+    dayOrderItems: List<AggregatedOrderItem>,
+    onOpenBill: (String) -> Unit,
+    onOpenCombined: (String) -> Unit
 ) {
     val dayTotal = dayBills.sumOf { it.dayTotal }
     val dayTotalMatchesClosed = moneyEquals(dayTotal, summary.total)
+    val totalPieces = dayOrderItems.sumOf { it.totalQty }
 
     Card(
-        modifier = Modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable { onOpenCombined(date) },
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
         Column(Modifier.padding(16.dp)) {
-            Text("ปิดแล้ว", style = MaterialTheme.typography.bodyMedium)
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text("ปิดแล้ว", style = MaterialTheme.typography.bodyMedium)
+                Text(
+                    "ดูรวมออเดอร์ทั้งหมด →",
+                    style = MaterialTheme.typography.labelLarge,
+                    color = MaterialTheme.colorScheme.primary,
+                    fontWeight = FontWeight.Bold
+                )
+            }
             Text(
                 formatMoney(summary.total),
                 style = MaterialTheme.typography.headlineMedium,
@@ -125,6 +157,21 @@ private fun ColumnScope.SummaryContent(
                     "รวมทั้งวัน (รวมบิลเปิด) ${formatMoney(dayTotal)}",
                     style = MaterialTheme.typography.bodyLarge
                 )
+            }
+            if (totalPieces > 0) {
+                Spacer(Modifier.height(8.dp))
+                Surface(
+                    color = MaterialTheme.colorScheme.primaryContainer,
+                    shape = RoundedCornerShape(8.dp)
+                ) {
+                    Text(
+                        "🍩 รวมไส้ขนมทั้งหมด $totalPieces ชิ้น (แตะเพื่อดูรายละเอียด)",
+                        modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp),
+                        style = MaterialTheme.typography.bodyMedium,
+                        fontWeight = FontWeight.SemiBold,
+                        color = MaterialTheme.colorScheme.onPrimaryContainer
+                    )
+                }
             }
         }
     }

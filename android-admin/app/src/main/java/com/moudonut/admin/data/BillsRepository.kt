@@ -77,6 +77,11 @@ class BillsRepository : SummarySource, ProductsSource {
             put("p_business_date", date)
         }).decodeAs<List<AdminDayBill>>()
 
+    override suspend fun dayOrderItems(date: String): List<AggregatedOrderItem> =
+        client.postgrest.rpc("admin_day_order_items", buildJsonObject {
+            put("p_business_date", date)
+        }).decodeAs<List<AggregatedOrderItem>>()
+
     suspend fun customers(): List<AdminCustomer> =
         client.postgrest.rpc("admin_list_customers").decodeAs<List<AdminCustomer>>()
 
