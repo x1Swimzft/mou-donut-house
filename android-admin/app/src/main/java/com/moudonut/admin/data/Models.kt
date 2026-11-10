@@ -169,3 +169,34 @@ data class ToggledProduct(
     @SerialName("is_available") val isAvailable: Boolean
 )
 
+@Serializable
+data class DeleteOrderResult(
+    @SerialName("orders_deleted") val ordersDeleted: Int = 0,
+    val success: Boolean = true
+)
+
+@Serializable
+data class DeleteCustomerResult(
+    @SerialName("customer_id") val customerId: String = "",
+    val deleted: Boolean = true
+)
+
+@Serializable
+data class DeleteCodeResult(
+    val code: String = "",
+    val deleted: Boolean = true
+)
+
+@Serializable
+data class UpdatedCustomer(
+    @SerialName("customer_id") val customerId: String,
+    val name: String
+)
+
+@Serializable
+data class UpdatedCode(
+    val code: String,
+    val label: String
+)
+
+

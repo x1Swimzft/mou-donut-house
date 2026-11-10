@@ -11,19 +11,33 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
@@ -33,10 +47,10 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.moudonut.admin.data.AdminDayBill
 import com.moudonut.admin.data.AggregatedOrderItem
 import com.moudonut.admin.data.StoreSummary
+import com.moudonut.admin.data.moneyEquals
 import com.moudonut.admin.util.formatMoney
 import com.moudonut.admin.util.shiftDate
 import com.moudonut.admin.util.todayBangkok
-import com.moudonut.admin.data.moneyEquals
 
 @Composable
 fun SummaryScreen(
@@ -45,66 +59,143 @@ fun SummaryScreen(
 ) {
     val vm: SummaryViewModel = viewModel()
     val state by vm.state.collectAsStateWithLifecycle()
+    val snackbar = remember { SnackbarHostState() }
+    var customerToDelete by remember { mutableStateOf<AdminDayBill?>(null) }
+    var showClearAllConfirm by remember { mutableStateOf(false) }
 
     LaunchedEffect(Unit) {
         vm.onScreenResumed()
     }
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(16.dp)
-    ) {
-        Text("สรุปรายวัน", style = MaterialTheme.typography.headlineSmall)
-        Spacer(Modifier.height(8.dp))
+    LaunchedEffect(state.message) {
+        val msg = state.message
+        if (msg != null) {
+            snackbar.showSnackbar(msg)
+            vm.clearMessage()
+        }
+    }
 
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
+    Scaffold(
+        snackbarHost = { SnackbarHost(snackbar) },
+        containerColor = MaterialTheme.colorScheme.background
+    ) { inner ->
+        Column(
+            modifier = Modifier
+                .padding(inner)
+                .fillMaxSize()
+                .padding(16.dp)
         ) {
-            TextButton(onClick = { vm.setDate(shiftDate(state.date, -1)) }) {
-                Text("ก่อนหน้า")
-            }
-            Text(state.date, style = MaterialTheme.typography.titleLarge)
-            TextButton(onClick = { vm.setDate(shiftDate(state.date, 1)) }) {
-                Text("ถัดไป")
-            }
-        }
-        TextButton(onClick = { vm.setDate(todayBangkok()) }) { Text("วันนี้") }
+            Text("สรุปรายวัน", style = MaterialTheme.typography.headlineSmall)
+            Spacer(Modifier.height(8.dp))
 
-        Spacer(Modifier.height(8.dp))
-
-        if (state.loading) {
-            Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                CircularProgressIndicator()
-            }
-        } else if (state.error != null) {
-            Text(state.error!!, color = MaterialTheme.colorScheme.error)
-            TextButton(onClick = { vm.load(state.date) }) { Text("ลองใหม่") }
-        } else {
-            val summary = state.summary
-            if (summary == null) {
-                Text("ไม่มีข้อมูล", style = MaterialTheme.typography.bodyLarge)
-            } else {
-                if (state.refreshError != null) {
-                    Text(
-                        "อัปเดตไม่สำเร็จ: ${state.refreshError}",
-                        color = MaterialTheme.colorScheme.error,
-                        style = MaterialTheme.typography.bodyMedium
-                    )
-                    TextButton(onClick = { vm.refresh() }) { Text("ลองใหม่") }
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                TextButton(onClick = { vm.setDate(shiftDate(state.date, -1)) }) {
+                    Text("ก่อนหน้า")
                 }
-                SummaryContent(
-                    date = state.date,
-                    summary = summary,
-                    dayBills = state.dayBills,
-                    dayOrderItems = state.dayOrderItems,
-                    onOpenBill = onOpenBill,
-                    onOpenCombined = onOpenCombined
-                )
+                Text(state.date, style = MaterialTheme.typography.titleLarge)
+                TextButton(onClick = { vm.setDate(shiftDate(state.date, 1)) }) {
+                    Text("ถัดไป")
+                }
+            }
+            TextButton(onClick = { vm.setDate(todayBangkok()) }) { Text("วันนี้") }
+
+            Spacer(Modifier.height(8.dp))
+
+            if (state.loading) {
+                Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                    CircularProgressIndicator()
+                }
+            } else if (state.error != null) {
+                Text(state.error!!, color = MaterialTheme.colorScheme.error)
+                TextButton(onClick = { vm.load(state.date) }) { Text("ลองใหม่") }
+            } else {
+                val summary = state.summary
+                if (summary == null) {
+                    Text("ไม่มีข้อมูล", style = MaterialTheme.typography.bodyLarge)
+                } else {
+                    if (state.refreshError != null) {
+                        Text(
+                            "อัปเดตไม่สำเร็จ: ${state.refreshError}",
+                            color = MaterialTheme.colorScheme.error,
+                            style = MaterialTheme.typography.bodyMedium
+                        )
+                        TextButton(onClick = { vm.refresh() }) { Text("ลองใหม่") }
+                    }
+                    SummaryContent(
+                        date = state.date,
+                        summary = summary,
+                        dayBills = state.dayBills,
+                        dayOrderItems = state.dayOrderItems,
+                        onOpenBill = onOpenBill,
+                        onOpenCombined = onOpenCombined,
+                        onDeleteCustomer = { customerToDelete = it },
+                        onClearAll = { showClearAllConfirm = true }
+                    )
+                }
             }
         }
+    }
+
+    if (showClearAllConfirm) {
+        AlertDialog(
+            onDismissRequest = { showClearAllConfirm = false },
+            title = { Text("เคลียร์ออเดอร์ทั้งหมด?") },
+            text = {
+                Text("ต้องการลบออเดอร์และบิลทั้งหมดของวันที่ ${state.date} ใช่หรือไม่?\nยอดสรุปทั้งหมดของวันนี้จะถูกรีเซ็ตเป็น 0")
+            },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        showClearAllConfirm = false
+                        vm.clearDayOrders()
+                    },
+                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error)
+                ) {
+                    Text("ยืนยันเคลียร์ทั้งหมด")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showClearAllConfirm = false }) {
+                    Text("ยกเลิก")
+                }
+            }
+        )
+    }
+
+    customerToDelete?.let { bill ->
+        AlertDialog(
+            onDismissRequest = { customerToDelete = null },
+            title = { Text("ลบออเดอร์ของ ${bill.customerName}?") },
+            text = {
+                Text("ต้องการลบออเดอร์ทั้งหมดในวันนี้ของ \"${bill.customerName}\" (${bill.orderCount} ออเดอร์ ยอด ${formatMoney(bill.dayTotal)}) ใช่หรือไม่?")
+            },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        val cid = bill.customerId
+                        val cname = bill.customerName
+                        customerToDelete = null
+                        if (cid != null) {
+                            vm.deleteCustomerDayOrders(cid, cname)
+                        } else {
+                            vm.deleteBill(bill.billId)
+                        }
+                    },
+                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error)
+                ) {
+                    Text("ยืนยันลบ")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { customerToDelete = null }) {
+                    Text("ยกเลิก")
+                }
+            }
+        )
     }
 }
 
@@ -115,7 +206,9 @@ private fun ColumnScope.SummaryContent(
     dayBills: List<AdminDayBill>,
     dayOrderItems: List<AggregatedOrderItem>,
     onOpenBill: (String) -> Unit,
-    onOpenCombined: (String) -> Unit
+    onOpenCombined: (String) -> Unit,
+    onDeleteCustomer: (AdminDayBill) -> Unit,
+    onClearAll: () -> Unit
 ) {
     val dayTotal = dayBills.sumOf { it.dayTotal }
     val dayTotalMatchesClosed = moneyEquals(dayTotal, summary.total)
@@ -183,16 +276,35 @@ private fun ColumnScope.SummaryContent(
         verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
         item {
-            Text(
-                "บิลของวันนี้ (${dayBills.size})",
-                style = MaterialTheme.typography.titleMedium
-            )
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    "บิลของวันนี้ (${dayBills.size})",
+                    style = MaterialTheme.typography.titleMedium
+                )
+                if (dayBills.isNotEmpty()) {
+                    TextButton(onClick = onClearAll) {
+                        Text(
+                            "🗑️ เคลียร์ทั้งหมด",
+                            color = MaterialTheme.colorScheme.error,
+                            fontWeight = FontWeight.SemiBold
+                        )
+                    }
+                }
+            }
         }
         if (dayBills.isEmpty()) {
             item { Text("ยังไม่มีบิลในวันนี้", style = MaterialTheme.typography.bodyMedium) }
         } else {
             items(dayBills, key = { it.billId }) { bill ->
-                DayBillRow(bill = bill, onClick = { onOpenBill(bill.billId) })
+                DayBillRow(
+                    bill = bill,
+                    onClick = { onOpenBill(bill.billId) },
+                    onDelete = { onDeleteCustomer(bill) }
+                )
             }
         }
 
@@ -211,7 +323,11 @@ private fun ColumnScope.SummaryContent(
 }
 
 @Composable
-private fun DayBillRow(bill: AdminDayBill, onClick: () -> Unit) {
+private fun DayBillRow(
+    bill: AdminDayBill,
+    onClick: () -> Unit,
+    onDelete: () -> Unit
+) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -245,11 +361,21 @@ private fun DayBillRow(bill: AdminDayBill, onClick: () -> Unit) {
                     )
                 }
             }
-            Text(
-                formatMoney(bill.dayTotal),
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.Bold
-            )
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text(
+                    formatMoney(bill.dayTotal),
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold
+                )
+                Spacer(Modifier.width(8.dp))
+                IconButton(onClick = onDelete) {
+                    Icon(
+                        Icons.Default.Delete,
+                        contentDescription = "ลบออเดอร์ของ ${bill.customerName}",
+                        tint = MaterialTheme.colorScheme.error
+                    )
+                }
+            }
         }
     }
 }

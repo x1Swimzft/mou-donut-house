@@ -15,6 +15,9 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
@@ -51,6 +54,7 @@ fun CombinedOrdersScreen(
     var loading by remember { mutableStateOf(true) }
     var items by remember { mutableStateOf<List<AggregatedOrderItem>>(emptyList()) }
     var error by remember { mutableStateOf<String?>(null) }
+    var showClearConfirm by remember { mutableStateOf(false) }
     val scope = rememberCoroutineScope()
 
     fun loadData() {
@@ -92,8 +96,19 @@ fun CombinedOrdersScreen(
                 TextButton(onClick = onBack) {
                     Text("← กลับ", style = MaterialTheme.typography.titleMedium)
                 }
-                TextButton(onClick = { loadData() }, enabled = !loading) {
-                    Text("รีเฟรช")
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    if (items.isNotEmpty()) {
+                        TextButton(onClick = { showClearConfirm = true }) {
+                            Text(
+                                "🗑️ เคลียร์ทั้งหมด",
+                                color = MaterialTheme.colorScheme.error,
+                                fontWeight = FontWeight.SemiBold
+                            )
+                        }
+                    }
+                    TextButton(onClick = { loadData() }, enabled = !loading) {
+                        Text("รีเฟรช")
+                    }
                 }
             }
 
@@ -132,43 +147,61 @@ fun CombinedOrdersScreen(
                         containerColor = MaterialTheme.colorScheme.primaryContainer
                     )
                 ) {
-                    Column(Modifier.padding(16.dp)) {
-                        Text(
-                            "รวมยอดขนมที่ต้องทำทั้งหมด",
-                            style = MaterialTheme.typography.labelMedium,
-                            color = MaterialTheme.colorScheme.onPrimaryContainer
-                        )
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.Bottom
-                        ) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(16.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Column {
+                            Text(
+                                "ยอดรวมทำขนม",
+                                style = MaterialTheme.typography.labelMedium,
+                                color = MaterialTheme.colorScheme.onPrimaryContainer
+                            )
                             Text(
                                 "$totalPieces ชิ้น",
                                 style = MaterialTheme.typography.headlineLarge,
-                                fontWeight = FontWeight.Bold,
+                                fontWeight = FontWeight.ExtraBold,
                                 color = MaterialTheme.colorScheme.onPrimaryContainer
                             )
                             Text(
-                                formatMoney(totalRevenue),
-                                style = MaterialTheme.typography.titleLarge,
-                                fontWeight = FontWeight.SemiBold,
-                                color = MaterialTheme.colorScheme.onPrimaryContainer
+                                "ลูกค้าสั่ง $uniqueCustomers คน · $totalRevenue บาท",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.8f)
                             )
                         }
-                        Spacer(Modifier.height(4.dp))
-                        Text(
-                            "${items.size} ไส้ขนม · ลูกค้าสั่งรวม $uniqueCustomers คน",
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onPrimaryContainer
-                        )
+                        Surface(
+                            shape = RoundedCornerShape(12.dp),
+                            color = MaterialTheme.colorScheme.primary
+                        ) {
+                            Text(
+                                "🍩",
+                                modifier = Modifier.padding(12.dp),
+                                style = MaterialTheme.typography.headlineMedium
+                            )
+                        }
                     }
                 }
 
                 Spacer(Modifier.height(16.dp))
 
+                Text(
+                    "รายการแยกตามไส้ขนม (${items.size} ไส้)",
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold
+                )
+
+                Spacer(Modifier.height(8.dp))
+
                 if (items.isEmpty()) {
-                    Box(Modifier.weight(1f).fillMaxWidth(), contentAlignment = Alignment.Center) {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .weight(1f),
+                        contentAlignment = Alignment.Center
+                    ) {
                         Text("ยังไม่มีออเดอร์ในวันนี้", style = MaterialTheme.typography.bodyLarge)
                     }
                 } else {
@@ -183,6 +216,41 @@ fun CombinedOrdersScreen(
                 }
             }
         }
+    }
+
+    if (showClearConfirm) {
+        AlertDialog(
+            onDismissRequest = { showClearConfirm = false },
+            title = { Text("เคลียร์ออเดอร์ทั้งหมด?") },
+            text = {
+                Text("ต้องการลบออเดอร์ทั้งหมดของวันที่ $date ใช่หรือไม่?\nข้อมูลการทำขนมและยอดรวมจะถูกรีเซ็ตเป็น 0")
+            },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        showClearConfirm = false
+                        scope.launch {
+                            loading = true
+                            try {
+                                repository.clearDayOrders(date)
+                                loadData()
+                            } catch (t: Throwable) {
+                                error = t.toThaiMessage()
+                                loading = false
+                            }
+                        }
+                    },
+                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error)
+                ) {
+                    Text("ยืนยันเคลียร์")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showClearConfirm = false }) {
+                    Text("ยกเลิก")
+                }
+            }
+        )
     }
 }
 

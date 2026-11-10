@@ -12,9 +12,12 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
@@ -41,6 +44,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.moudonut.admin.data.AdminCode
 import com.moudonut.admin.data.AdminCustomer
 
 @Composable
@@ -50,12 +54,20 @@ fun CustomersScreen() {
     val snackbar = remember { SnackbarHostState() }
     var creating by remember { mutableStateOf(false) }
     var addingTo by remember { mutableStateOf<AdminCustomer?>(null) }
+    var editingCustomer by remember { mutableStateOf<AdminCustomer?>(null) }
+    var deletingCustomer by remember { mutableStateOf<AdminCustomer?>(null) }
+    var editingCode by remember { mutableStateOf<AdminCode?>(null) }
+    var deletingCode by remember { mutableStateOf<AdminCode?>(null) }
 
     LaunchedEffect(state.message) {
         val message = state.message
         if (message != null) {
             creating = false
             addingTo = null
+            editingCustomer = null
+            deletingCustomer = null
+            editingCode = null
+            deletingCode = null
             snackbar.showSnackbar(message)
             vm.clearMessage()
         }
@@ -137,7 +149,11 @@ fun CustomersScreen() {
                             customer = customer,
                             enabled = !state.saving,
                             onToggle = vm::toggleCode,
-                            onAddCode = { addingTo = customer }
+                            onAddCode = { addingTo = customer },
+                            onEditCustomer = { editingCustomer = customer },
+                            onDeleteCustomer = { deletingCustomer = customer },
+                            onEditCode = { editingCode = it },
+                            onDeleteCode = { deletingCode = it }
                         )
                     }
                 }
@@ -162,6 +178,73 @@ fun CustomersScreen() {
             onConfirm = { _, code, label -> vm.addCode(customer.customerId, code, label) }
         )
     }
+
+    editingCustomer?.let { customer ->
+        EditNameDialog(
+            currentName = customer.name,
+            saving = state.saving,
+            onDismiss = { if (!state.saving) editingCustomer = null },
+            onConfirm = { newName -> vm.updateCustomer(customer.customerId, newName) }
+        )
+    }
+
+    deletingCustomer?.let { customer ->
+        AlertDialog(
+            onDismissRequest = { if (!state.saving) deletingCustomer = null },
+            title = { Text("ลบลูกค้า?") },
+            text = {
+                Text("ต้องการลบลูกค้า \"${customer.name}\" ใช่หรือไม่?\nรหัสผ่านและประวัติออเดอร์ทั้งหมดของลูกค้ารายนี้จะถูกลบถาวร")
+            },
+            confirmButton = {
+                Button(
+                    onClick = { vm.deleteCustomer(customer.customerId) },
+                    enabled = !state.saving,
+                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error)
+                ) {
+                    Text(if (state.saving) "กำลังลบ..." else "ยืนยันลบลูกค้า")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { deletingCustomer = null }, enabled = !state.saving) {
+                    Text("ยกเลิก")
+                }
+            }
+        )
+    }
+
+    editingCode?.let { code ->
+        EditCodeDialog(
+            code = code.code,
+            currentLabel = code.label ?: "",
+            saving = state.saving,
+            onDismiss = { if (!state.saving) editingCode = null },
+            onConfirm = { newLabel -> vm.updateCode(code.code, newLabel) }
+        )
+    }
+
+    deletingCode?.let { code ->
+        AlertDialog(
+            onDismissRequest = { if (!state.saving) deletingCode = null },
+            title = { Text("ลบรหัสผ่าน?") },
+            text = {
+                Text("ต้องการลบรหัสผ่าน \"${code.code}\" (${code.label ?: "ไม่มีป้ายกำกับ"}) ใช่หรือไม่?")
+            },
+            confirmButton = {
+                Button(
+                    onClick = { vm.deleteCode(code.code) },
+                    enabled = !state.saving,
+                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error)
+                ) {
+                    Text(if (state.saving) "กำลังลบ..." else "ยืนยันลบ")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { deletingCode = null }, enabled = !state.saving) {
+                    Text("ยกเลิก")
+                }
+            }
+        )
+    }
 }
 
 @Composable
@@ -169,15 +252,42 @@ private fun CustomerCard(
     customer: AdminCustomer,
     enabled: Boolean,
     onToggle: (String, Boolean) -> Unit,
-    onAddCode: () -> Unit
+    onAddCode: () -> Unit,
+    onEditCustomer: () -> Unit,
+    onDeleteCustomer: () -> Unit,
+    onEditCode: (AdminCode) -> Unit,
+    onDeleteCode: (AdminCode) -> Unit
 ) {
     Card(Modifier.fillMaxWidth()) {
         Column(Modifier.padding(16.dp)) {
-            Text(
-                customer.name,
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.Bold
-            )
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    customer.name,
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier.weight(1f)
+                )
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    IconButton(onClick = onEditCustomer, enabled = enabled) {
+                        Icon(
+                            Icons.Default.Edit,
+                            contentDescription = "แก้ไขชื่อลูกค้า",
+                            tint = MaterialTheme.colorScheme.primary
+                        )
+                    }
+                    IconButton(onClick = onDeleteCustomer, enabled = enabled) {
+                        Icon(
+                            Icons.Default.Delete,
+                            contentDescription = "ลบลูกค้า",
+                            tint = MaterialTheme.colorScheme.error
+                        )
+                    }
+                }
+            }
             Spacer(Modifier.height(8.dp))
 
             if (customer.codes.isEmpty()) {
@@ -202,11 +312,27 @@ private fun CustomerCard(
                                 style = MaterialTheme.typography.bodySmall
                             )
                         }
-                        Switch(
-                            checked = code.isActive,
-                            onCheckedChange = { onToggle(code.code, it) },
-                            enabled = enabled
-                        )
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Switch(
+                                checked = code.isActive,
+                                onCheckedChange = { onToggle(code.code, it) },
+                                enabled = enabled
+                            )
+                            IconButton(onClick = { onEditCode(code) }, enabled = enabled) {
+                                Icon(
+                                    Icons.Default.Edit,
+                                    contentDescription = "แก้ไขป้ายกำกับ",
+                                    tint = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            }
+                            IconButton(onClick = { onDeleteCode(code) }, enabled = enabled) {
+                                Icon(
+                                    Icons.Default.Delete,
+                                    contentDescription = "ลบรหัสนี้",
+                                    tint = MaterialTheme.colorScheme.error
+                                )
+                            }
+                        }
                     }
                 }
             }
@@ -218,6 +344,83 @@ private fun CustomerCard(
             }
         }
     }
+}
+
+@Composable
+private fun EditNameDialog(
+    currentName: String,
+    saving: Boolean,
+    onDismiss: () -> Unit,
+    onConfirm: (newName: String) -> Unit
+) {
+    var name by remember { mutableStateOf(currentName) }
+    val valid = name.isNotBlank() && name.trim() != currentName
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("แก้ไขชื่อลูกค้า") },
+        text = {
+            OutlinedTextField(
+                value = name,
+                onValueChange = { name = it },
+                label = { Text("ชื่อลูกค้า (1–80 ตัวอักษร)") },
+                singleLine = true,
+                modifier = Modifier.fillMaxWidth()
+            )
+        },
+        confirmButton = {
+            TextButton(
+                onClick = { onConfirm(name.trim()) },
+                enabled = valid && !saving
+            ) {
+                Text(if (saving) "กำลังบันทึก..." else "บันทึก")
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss, enabled = !saving) {
+                Text("ยกเลิก")
+            }
+        }
+    )
+}
+
+@Composable
+private fun EditCodeDialog(
+    code: String,
+    currentLabel: String,
+    saving: Boolean,
+    onDismiss: () -> Unit,
+    onConfirm: (newLabel: String) -> Unit
+) {
+    var label by remember { mutableStateOf(currentLabel) }
+    val valid = label.isNotBlank() && label.trim() != currentLabel
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("แก้ไขป้ายกำกับรหัส $code") },
+        text = {
+            OutlinedTextField(
+                value = label,
+                onValueChange = { label = it },
+                label = { Text("ป้ายกำกับ (1–40 ตัว)") },
+                singleLine = true,
+                modifier = Modifier.fillMaxWidth()
+            )
+        },
+        confirmButton = {
+            TextButton(
+                onClick = { onConfirm(label.trim()) },
+                enabled = valid && !saving
+            ) {
+                Text(if (saving) "กำลังบันทึก..." else "บันทึก")
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss, enabled = !saving) {
+                Text("ยกเลิก")
+            }
+        }
+    )
 }
 
 @Composable

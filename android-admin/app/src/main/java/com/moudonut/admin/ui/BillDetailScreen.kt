@@ -11,7 +11,9 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
@@ -22,7 +24,9 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
@@ -38,6 +42,7 @@ fun BillDetailScreen(id: String, onBack: () -> Unit) {
     val vm: BillDetailViewModel = viewModel()
     val state by vm.state.collectAsStateWithLifecycle()
     val snackbar = remember { SnackbarHostState() }
+    var confirmDelete by remember { mutableStateOf(false) }
 
     LaunchedEffect(id) {
         vm.load(id)
@@ -172,8 +177,45 @@ fun BillDetailScreen(id: String, onBack: () -> Unit) {
                         ) {
                             Text(if (state.closing) "กำลังปิด..." else "ปิดบิลนี้")
                         }
+                        Spacer(Modifier.height(8.dp))
                     } else {
                         Text("บิลนี้ปิดแล้ว", style = MaterialTheme.typography.bodyLarge)
+                        Spacer(Modifier.height(8.dp))
+                    }
+
+                    Button(
+                        onClick = { confirmDelete = true },
+                        enabled = !state.closing,
+                        colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error),
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Text("🗑️ ลบบิลนี้ (ล้างออเดอร์ในบิล)")
+                    }
+
+                    if (confirmDelete) {
+                        AlertDialog(
+                            onDismissRequest = { confirmDelete = false },
+                            title = { Text("ลบบิลนี้?") },
+                            text = {
+                                Text("ต้องการลบบิลของ \"${bill.customerName}\" ยอด ${formatMoney(bill.total)} ใช่หรือไม่?\nออเดอร์ทั้งหมดในบิลนี้จะถูกลบถาวร")
+                            },
+                            confirmButton = {
+                                Button(
+                                    onClick = {
+                                        confirmDelete = false
+                                        vm.delete(bill.id) { onBack() }
+                                    },
+                                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error)
+                                ) {
+                                    Text("ยืนยันลบ")
+                                }
+                            },
+                            dismissButton = {
+                                TextButton(onClick = { confirmDelete = false }) {
+                                    Text("ยกเลิก")
+                                }
+                            }
+                        )
                     }
                 }
             }

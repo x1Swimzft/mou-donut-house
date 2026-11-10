@@ -82,6 +82,44 @@ class BillsRepository : SummarySource, ProductsSource {
             put("p_business_date", date)
         }).decodeAs<List<AggregatedOrderItem>>()
 
+    override suspend fun deleteCustomerDayOrders(customerId: String, date: String): DeleteOrderResult =
+        client.postgrest.rpc("admin_delete_customer_day_orders", buildJsonObject {
+            put("p_customer_id", customerId)
+            put("p_business_date", date)
+        }).decodeAs<DeleteOrderResult>()
+
+    override suspend fun clearDayOrders(date: String): DeleteOrderResult =
+        client.postgrest.rpc("admin_clear_day_orders", buildJsonObject {
+            put("p_business_date", date)
+        }).decodeAs<DeleteOrderResult>()
+
+    override suspend fun deleteBill(billId: String): DeleteOrderResult =
+        client.postgrest.rpc("admin_delete_bill", buildJsonObject {
+            put("p_bill_id", billId)
+        }).decodeAs<DeleteOrderResult>()
+
+    suspend fun updateCustomer(customerId: String, name: String): UpdatedCustomer =
+        client.postgrest.rpc("admin_update_customer", buildJsonObject {
+            put("p_customer_id", customerId)
+            put("p_name", name)
+        }).decodeAs<UpdatedCustomer>()
+
+    suspend fun deleteCustomer(customerId: String): DeleteCustomerResult =
+        client.postgrest.rpc("admin_delete_customer", buildJsonObject {
+            put("p_customer_id", customerId)
+        }).decodeAs<DeleteCustomerResult>()
+
+    suspend fun deleteCode(code: String): DeleteCodeResult =
+        client.postgrest.rpc("admin_delete_code", buildJsonObject {
+            put("p_code", code)
+        }).decodeAs<DeleteCodeResult>()
+
+    suspend fun updateCode(code: String, label: String): UpdatedCode =
+        client.postgrest.rpc("admin_update_code", buildJsonObject {
+            put("p_code", code)
+            put("p_label", label)
+        }).decodeAs<UpdatedCode>()
+
     suspend fun customers(): List<AdminCustomer> =
         client.postgrest.rpc("admin_list_customers").decodeAs<List<AdminCustomer>>()
 

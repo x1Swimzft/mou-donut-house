@@ -55,4 +55,18 @@ class BillDetailViewModel : ViewModel() {
             }
         }
     }
+
+    fun delete(id: String, onDeleted: () -> Unit) {
+        if (_state.value.closing) return
+        viewModelScope.launch {
+            _state.update { it.copy(closing = true, error = null) }
+            try {
+                repository.deleteBill(id)
+                _state.update { it.copy(closing = false, message = "ลบบิลเรียบร้อย") }
+                onDeleted()
+            } catch (t: Throwable) {
+                _state.update { it.copy(closing = false, error = t.toThaiMessage()) }
+            }
+        }
+    }
 }

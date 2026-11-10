@@ -21,7 +21,9 @@ data class SummaryUiState(
     val dayBills: List<AdminDayBill> = emptyList(),
     val dayOrderItems: List<AggregatedOrderItem> = emptyList(),
     val error: String? = null,
-    val refreshError: String? = null
+    val refreshError: String? = null,
+    val operating: Boolean = false,
+    val message: String? = null
 )
 
 class SummaryViewModel(
@@ -101,5 +103,69 @@ class SummaryViewModel(
                 _state.update { it.copy(loading = false, error = t.toThaiMessage()) }
             }
         }
+    }
+
+    fun deleteCustomerDayOrders(customerId: String, customerName: String?) {
+        viewModelScope.launch {
+            _state.update { it.copy(operating = true) }
+            val date = _state.value.date
+            try {
+                val res = source.deleteCustomerDayOrders(customerId, date)
+                _state.update {
+                    it.copy(
+                        operating = false,
+                        message = "ลบออเดอร์ของ ${customerName ?: "ลูกค้า"} (${res.ordersDeleted} รายการ) สำเร็จ"
+                    )
+                }
+                load(date)
+            } catch (t: Throwable) {
+                _state.update {
+                    it.copy(operating = false, message = "ลบไม่สำเร็จ: ${t.toThaiMessage()}")
+                }
+            }
+        }
+    }
+
+    fun clearDayOrders() {
+        viewModelScope.launch {
+            _state.update { it.copy(operating = true) }
+            val date = _state.value.date
+            try {
+                val res = source.clearDayOrders(date)
+                _state.update {
+                    it.copy(
+                        operating = false,
+                        message = "เคลียร์ออเดอร์ทั้งหมดของวันนี้ (${res.ordersDeleted} รายการ) เรียบร้อย"
+                    )
+                }
+                load(date)
+            } catch (t: Throwable) {
+                _state.update {
+                    it.copy(operating = false, message = "เคลียร์ไม่สำเร็จ: ${t.toThaiMessage()}")
+                }
+            }
+        }
+    }
+
+    fun deleteBill(billId: String) {
+        viewModelScope.launch {
+            _state.update { it.copy(operating = true) }
+            val date = _state.value.date
+            try {
+                source.deleteBill(billId)
+                _state.update {
+                    it.copy(operating = false, message = "ลบบิลเรียบร้อย")
+                }
+                load(date)
+            } catch (t: Throwable) {
+                _state.update {
+                    it.copy(operating = false, message = "ลบบิลไม่สำเร็จ: ${t.toThaiMessage()}")
+                }
+            }
+        }
+    }
+
+    fun clearMessage() {
+        _state.update { it.copy(message = null) }
     }
 }

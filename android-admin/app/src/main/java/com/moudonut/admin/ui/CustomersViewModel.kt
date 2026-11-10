@@ -41,8 +41,20 @@ class CustomersViewModel : ViewModel() {
     fun createCustomer(name: String, code: String, label: String) =
         save("เพิ่มลูกค้าแล้ว") { repository.createCustomer(name, code, label) }
 
+    fun updateCustomer(customerId: String, name: String) =
+        save("แก้ไขชื่อลูกค้าเรียบร้อย") { repository.updateCustomer(customerId, name) }
+
+    fun deleteCustomer(customerId: String) =
+        save("ลบลูกค้าเรียบร้อย") { repository.deleteCustomer(customerId) }
+
     fun addCode(customerId: String, code: String, label: String) =
         save("เพิ่มรหัสแล้ว") { repository.addCode(customerId, code, label) }
+
+    fun updateCode(code: String, label: String) =
+        save("แก้ไขป้ายกำกับรหัสเรียบร้อย") { repository.updateCode(code, label) }
+
+    fun deleteCode(code: String) =
+        save("ลบรหัส $code เรียบร้อย") { repository.deleteCode(code) }
 
     fun toggleCode(code: String, active: Boolean) {
         if (_state.value.saving) return
