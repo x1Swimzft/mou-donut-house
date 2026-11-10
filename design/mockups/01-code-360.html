@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="th">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="only light">
+  <meta name="darkreader-lock">
+  <title>Mou Donut House — กรอกรหัสลูกค้า (360px)</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@400;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="mockup.css">
+</head>
+<body>
+  <div class="screen">
+    <header class="brand">
+      <span class="brand-name">Mou Donut House</span>
+      <span class="brand-sub">ร้านโดนัทของเรา</span>
+    </header>
+
+    <main>
+      <h1>กรอกรหัสลูกค้า</h1>
+      <p class="lead">รหัสคือชุดตัวอักษรที่ร้านออกให้คุณ</p>
+
+      <form class="stack" novalidate>
+        <label class="field-label" for="code">รหัสลูกค้า</label>
+        <input class="code-input" id="code" name="code" type="text" value="DN-TEST-0001" maxlength="16" autocomplete="off" spellcheck="false" inputmode="text" aria-describedby="code-help code-error">
+        <p class="help" id="code-help">พิมพ์ตัวอักษรให้ครบ แล้วกด “เข้าสู่ร้าน”</p>
+
+        <div class="error" id="code-error" role="alert">
+          <strong>รหัสนี้ใช้ไม่ได้</strong>
+          <span>กรุณาตรวจสอบอีกครั้ง หรือสอบถามพนักงานที่ร้าน</span>
+        </div>
+
+        <button class="button primary" type="button">เข้าสู่ร้าน</button>
+      </form>
+    </main>
+
+    <p class="foot">หากไม่มีรหัส สอบถามพนักงานที่ร้านได้เลย</p>
+  </div>
+</body>
+</html>

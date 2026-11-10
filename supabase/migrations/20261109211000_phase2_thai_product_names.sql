@@ -1,0 +1,10 @@
+update public.products set name = 'โดนัทน้ำตาล'      where name = 'Original Glazed';
+update public.products set name = 'โดนัทช็อกโกแลต'   where name = 'Chocolate Glazed';
+update public.products set name = 'โดนัทสตรอว์เบอร์รี' where name = 'Strawberry Frosted';
+update public.products set name = 'โดนัทมัทฉะ'       where name = 'Matcha White';
+update public.products set name = 'โดนัทคัสตาร์ด'    where name = 'Custard Filled';
+update public.products set name = 'โดนัทอัลมอนด์'    where name = 'Almond Crunch';
+update public.products set name = 'อเมริกาโน'        where name = 'Americano';
+update public.products set name = 'ลาเต้เย็น'         where name = 'Iced Latte';
+update public.products set name = 'ชาไทยเย็น'         where name = 'Thai Tea';
+update public.products set name = 'น้ำเปล่า'          where name = 'Bottled Water';

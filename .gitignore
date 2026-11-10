@@ -1,0 +1,39 @@
+# dependencies
+/node_modules
+
+# next.js
+/.next/
+/out/
+
+# production
+/build
+
+# local env files — never commit
+.env*
+!.env.example
+
+# vercel
+.vercel
+
+# typescript
+*.tsbuildinfo
+next-env.d.ts
+
+# misc
+.DS_Store
+npm-debug.log*
+
+# android admin
+/android-admin/.gradle/
+/android-admin/build/
+/android-admin/app/build/
+/android-admin/local.properties
+/android-admin/.idea/
+/android-admin/*.iml
+
+# test & evidence
+test-*.mjs
+check-*.mjs
+setup-*.mjs
+phase*-evidence/
+*.png
