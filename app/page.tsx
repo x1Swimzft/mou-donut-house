@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import BrandHeader from "@/components/BrandHeader";
 import Notice from "@/components/Notice";
@@ -167,6 +168,11 @@ export default function LoginPage() {
 
           <div className="login-card-footer">
             <p className="foot-note">หากยังไม่มีรหัส สามารถสอบถามพนักงานที่หน้าร้านได้เลยครับ</p>
+            <p className="foot-note" style={{ marginTop: "12px" }}>
+              <Link href="/download" style={{ color: "#781d42", textDecoration: "none", fontWeight: 500 }}>
+                📱 ดาวน์โหลดแอปสำหรับผู้ดูแลร้าน (Android APK)
+              </Link>
+            </p>
           </div>
         </div>
       </main>
