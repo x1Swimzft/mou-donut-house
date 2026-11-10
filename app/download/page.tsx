@@ -68,27 +68,6 @@ export default function DownloadPage() {
             </a>
           </div>
 
-          <div
-            style={{
-              background: "#fff",
-              border: "1px solid var(--color-border, #e5e0d8)",
-              borderRadius: "12px",
-              padding: "16px",
-              marginBottom: "20px",
-              fontSize: "0.92rem",
-              lineHeight: 1.6,
-            }}
-          >
-            <h3 style={{ margin: "0 0 10px 0", fontSize: "1rem", color: "#781d42" }}>
-              🔑 บัญชีผู้ดูแลระบบ (Admin Credentials)
-            </h3>
-            <p style={{ margin: "4px 0" }}>
-              <strong>Email:</strong> <code>patsk2550@gmail.com</code>
-            </p>
-            <p style={{ margin: "4px 0" }}>
-              <strong>Password:</strong> <code>MouDonut2026!</code>
-            </p>
-          </div>
 
           <div
             style={{
@@ -105,7 +84,7 @@ export default function DownloadPage() {
               <li>
                 หากมีข้อความแจ้งเตือนความปลอดภัย ให้เลือก <em>&quot;อนุญาตให้ติดตั้งจากแหล่งนี้&quot;</em> หรือ <em>&quot;Install anyway&quot;</em>
               </li>
-              <li>เปิดแอปแล้วเข้าสู่ระบบด้วยบัญชีแอดมินด้านบนเพื่อใช้งานทันที</li>
+              <li>เปิดแอปแล้วเข้าสู่ระบบด้วยบัญชีแอดมินของร้านเพื่อใช้งานทันที</li>
             </ol>
           </div>
 
