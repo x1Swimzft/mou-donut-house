@@ -6,7 +6,7 @@ import { useEffect, useRef, useState } from "react";
 import BrandHeader from "@/components/BrandHeader";
 import Notice from "@/components/Notice";
 import { formatMoney } from "@/lib/format";
-import { changeQty, estimateTotal, removeLine } from "@/lib/cart";
+import { changeQty, estimateTotal, removeLine, setLineQty } from "@/lib/cart";
 import {
   ERROR_MESSAGES,
   GENERIC_DATA_ERROR,
@@ -111,6 +111,10 @@ export default function CartPage() {
 
   function handleQty(productId: string, delta: number) {
     setCartState(changeQty(productId, delta));
+  }
+
+  function handleSetQty(productId: string, qty: number) {
+    setCartState(setLineQty(productId, qty));
   }
 
   function handleRemove(productId: string) {
@@ -285,9 +289,11 @@ export default function CartPage() {
                         >
                           <span aria-hidden="true">−</span> 5
                         </button>
-                        <span className="qty-value" aria-label={`จำนวน ${line.qty} ชิ้น`}>
-                          {line.qty} ชิ้น
-                        </span>
+                        <QtyInput
+                          qty={line.qty}
+                          name={line.product?.name ?? "สินค้า"}
+                          onChange={(newQty) => handleSetQty(line.product_id, newQty)}
+                        />
                         <button
                           className="button secondary qty-button"
                           type="button"
@@ -371,6 +377,75 @@ export default function CartPage() {
           </div>
         ) : null}
       </main>
+    </div>
+  );
+}
+
+function QtyInput({
+  qty,
+  onChange,
+  name
+}: {
+  qty: number;
+  onChange: (newQty: number) => void;
+  name: string;
+}) {
+  const [val, setVal] = useState(String(qty));
+  const [isFocused, setIsFocused] = useState(false);
+
+  useEffect(() => {
+    if (!isFocused) {
+      setVal(String(qty));
+    }
+  }, [qty, isFocused]);
+
+  function commit() {
+    setIsFocused(false);
+    const parsed = parseInt(val, 10);
+    if (Number.isFinite(parsed) && parsed > 0) {
+      onChange(parsed);
+      setVal(String(parsed));
+    } else {
+      setVal(String(qty));
+    }
+  }
+
+  return (
+    <div
+      className={`qty-input-wrapper${isFocused ? " focused" : ""}`}
+      title="คลิกเพื่อพิมพ์จำนวนชิ้น"
+    >
+      <input
+        type="number"
+        inputMode="numeric"
+        pattern="[0-9]*"
+        min={1}
+        max={9999}
+        value={val}
+        aria-label={`จำนวนชิ้นสำหรับ ${name}`}
+        className="qty-direct-input"
+        onFocus={(e) => {
+          setIsFocused(true);
+          e.target.select();
+        }}
+        onChange={(e) => {
+          setVal(e.target.value);
+        }}
+        onBlur={commit}
+        onKeyDown={(e) => {
+          if (e.key === "Enter") {
+            commit();
+            (e.target as HTMLInputElement).blur();
+          } else if (e.key === "Escape") {
+            setVal(String(qty));
+            setIsFocused(false);
+            (e.target as HTMLInputElement).blur();
+          }
+        }}
+      />
+      <span className="qty-unit" aria-hidden="true">
+        ชิ้น
+      </span>
     </div>
   );
 }

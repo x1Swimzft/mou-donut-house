@@ -801,6 +801,62 @@ a {
   text-align: center;
 }
 
+.qty-input-wrapper {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  min-width: 76px;
+  height: 44px;
+  padding: 0 10px;
+  background: var(--color-surface);
+  border: 1.5px solid rgba(42, 23, 18, 0.16);
+  border-radius: var(--radius-control);
+  box-shadow: var(--shadow-sm);
+  cursor: text;
+  transition: all 0.15s cubic-bezier(0.2, 0, 0, 1);
+}
+
+.qty-input-wrapper:hover {
+  border-color: rgba(142, 27, 58, 0.4);
+}
+
+.qty-input-wrapper.focused {
+  border-color: var(--color-primary);
+  background: var(--color-surface);
+  box-shadow: 0 0 0 3px rgba(142, 27, 58, 0.15);
+}
+
+.qty-direct-input {
+  width: 44px;
+  height: 100%;
+  border: none;
+  background: transparent;
+  color: var(--color-ink);
+  font-family: var(--font-thai);
+  font-size: var(--text-body);
+  font-weight: var(--weight-bold);
+  font-variant-numeric: tabular-nums;
+  text-align: center;
+  outline: none;
+  padding: 0;
+  -moz-appearance: textfield;
+}
+
+.qty-direct-input::-webkit-outer-spin-button,
+.qty-direct-input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+.qty-unit {
+  font-size: var(--text-small);
+  font-weight: var(--weight-medium);
+  color: var(--color-ink-muted);
+  user-select: none;
+  pointer-events: none;
+}
+
 .remove-btn {
   padding: 6px 12px;
   background: transparent;

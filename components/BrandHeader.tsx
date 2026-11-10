@@ -14,10 +14,18 @@ export default function BrandHeader() {
   const [cartCount, setCartCount] = useState(0);
 
   useEffect(() => {
-    setName(getCustomerName());
-    setCode(getCode());
-    const cart = getCart();
-    setCartCount(countItems(cart));
+    function sync() {
+      setName(getCustomerName());
+      setCode(getCode());
+      setCartCount(countItems(getCart()));
+    }
+    sync();
+    window.addEventListener("mdh_cart_change", sync);
+    window.addEventListener("storage", sync);
+    return () => {
+      window.removeEventListener("mdh_cart_change", sync);
+      window.removeEventListener("storage", sync);
+    };
   }, [pathname]);
 
   function handleLogout() {

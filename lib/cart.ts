@@ -24,6 +24,21 @@ export function changeQty(productId: string, delta: number): CartLine[] {
   return next;
 }
 
+export function setLineQty(productId: string, qty: number): CartLine[] {
+  const cart = getCart();
+  if (qty <= 0) {
+    return removeLine(productId);
+  }
+  const existing = cart.find((line) => line.product_id === productId);
+  const next = existing
+    ? cart.map((line) =>
+        line.product_id === productId ? { ...line, qty } : line
+      )
+    : [...cart, { product_id: productId, qty }];
+  setCart(next);
+  return next;
+}
+
 export function removeLine(productId: string): CartLine[] {
   const next = getCart().filter((line) => line.product_id !== productId);
   setCart(next);

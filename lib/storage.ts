@@ -70,6 +70,13 @@ export function getCart(): CartLine[] {
 
 export function setCart(cart: CartLine[]) {
   writeJson(CART_KEY, cart);
+  if (hasWindow() && typeof window.dispatchEvent === "function") {
+    try {
+      window.dispatchEvent(new Event("mdh_cart_change"));
+    } catch {
+      // Ignore in non-standard window envs
+    }
+  }
 }
 
 export function getLastOrder(): LastOrder | null {
