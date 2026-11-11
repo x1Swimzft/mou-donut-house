@@ -37,6 +37,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.moudonut.admin.util.PaperMenu
 import com.moudonut.admin.util.formatDateTime
 import com.moudonut.admin.util.formatMoney
 import com.moudonut.admin.util.formatTime
@@ -179,7 +180,12 @@ fun BillDetailScreen(id: String, onBack: () -> Unit) {
                                         )
                                     }
                                     Spacer(Modifier.height(6.dp))
-                                    order.items.forEach { item ->
+                                    val sortedItems = remember(order.items) {
+                                        order.items.sortedWith(
+                                            compareBy({ PaperMenu.sortIndex(it.productName) }, { it.productName })
+                                        )
+                                    }
+                                    sortedItems.forEach { item ->
                                         Row(
                                             modifier = Modifier
                                                 .fillMaxWidth()

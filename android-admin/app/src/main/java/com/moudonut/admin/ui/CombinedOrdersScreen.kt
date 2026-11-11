@@ -42,6 +42,7 @@ import androidx.compose.ui.unit.dp
 import com.moudonut.admin.data.AggregatedOrderItem
 import com.moudonut.admin.data.BillsRepository
 import com.moudonut.admin.data.toThaiMessage
+import com.moudonut.admin.util.PaperMenu
 import com.moudonut.admin.util.formatMoney
 import kotlinx.coroutines.launch
 
@@ -63,7 +64,9 @@ fun CombinedOrdersScreen(
             loading = true
             error = null
             try {
-                items = repository.dayOrderItems(date)
+                items = repository.dayOrderItems(date).sortedWith(
+                    compareBy({ PaperMenu.sortIndex(it.productName) }, { it.productName })
+                )
             } catch (t: Throwable) {
                 error = t.toThaiMessage()
             } finally {

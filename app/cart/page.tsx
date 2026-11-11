@@ -206,10 +206,13 @@ export default function CartPage() {
   }
 
   const productById = new Map(catalog.map((product) => [product.id, product]));
-  const lines = cart.map((line) => ({
-    ...line,
-    product: productById.get(line.product_id) ?? null
-  }));
+  const catalogIndex = new Map(catalog.map((product, idx) => [product.id, idx]));
+  const lines = cart
+    .map((line) => ({
+      ...line,
+      product: productById.get(line.product_id) ?? null
+    }))
+    .sort((a, b) => (catalogIndex.get(a.product_id) ?? 999) - (catalogIndex.get(b.product_id) ?? 999));
   const total = estimateTotal(cart, catalog);
   const totalCount = cart.reduce((sum, item) => sum + item.qty, 0);
 

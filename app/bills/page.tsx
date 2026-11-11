@@ -25,6 +25,30 @@ function formatDateTime(isoString: string): string {
   }
 }
 
+const PAPER_MENU_ORDER = [
+  "ไส้กรอก",
+  "หมูหยอง",
+  "ลูกเกด",
+  "สับปะรด",
+  "ถั่วแดง",
+  "เผือก",
+  "สังขยา",
+  "ปูอัด",
+  "ไก่",
+  "แฮม",
+  "มะพร้าว",
+  "ช็อคโกแลต",
+  "มันม่วง",
+  "ข้าวโพด",
+  "พิซซ่า",
+  "โดนัท",
+  "ตุ๊กตา"
+];
+const paperMenuIndex = new Map(PAPER_MENU_ORDER.map((name, idx) => [name, idx]));
+function getPaperMenuIndex(name: string): number {
+  return paperMenuIndex.get(name) ?? 999;
+}
+
 export default function MyBillsPage() {
   const router = useRouter();
   const [bills, setBills] = useState<CustomerBill[]>([]);
@@ -167,7 +191,10 @@ export default function MyBillsPage() {
                   </div>
 
                   <div className="bill-items-list">
-                    {bill.items.map((item, idx) => (
+                    {bill.items
+                      .slice()
+                      .sort((a, b) => getPaperMenuIndex(a.product_name) - getPaperMenuIndex(b.product_name))
+                      .map((item, idx) => (
                       <div className="bill-item-row" key={idx}>
                         <span className="bill-item-name">{item.product_name}</span>
                         <span className="bill-item-qty">{item.qty} ชิ้น</span>

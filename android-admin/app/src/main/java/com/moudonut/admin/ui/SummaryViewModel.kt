@@ -8,6 +8,7 @@ import com.moudonut.admin.data.BillsRepository
 import com.moudonut.admin.data.StoreSummary
 import com.moudonut.admin.data.SummarySource
 import com.moudonut.admin.data.toThaiMessage
+import com.moudonut.admin.util.PaperMenu
 import com.moudonut.admin.util.todayBangkok
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -61,7 +62,9 @@ class SummaryViewModel(
             try {
                 val summary = source.summary(date)
                 val bills = source.dayBills(date)
-                val orderItems = source.dayOrderItems(date)
+                val orderItems = source.dayOrderItems(date).sortedWith(
+                    compareBy({ PaperMenu.sortIndex(it.productName) }, { it.productName })
+                )
                 if (_state.value.date != date) return@launch
                 _state.update {
                     it.copy(
@@ -87,7 +90,9 @@ class SummaryViewModel(
             try {
                 val summary = source.summary(date)
                 val bills = source.dayBills(date)
-                val orderItems = source.dayOrderItems(date)
+                val orderItems = source.dayOrderItems(date).sortedWith(
+                    compareBy({ PaperMenu.sortIndex(it.productName) }, { it.productName })
+                )
                 if (_state.value.date != date) return@launch
                 _state.update {
                     it.copy(
