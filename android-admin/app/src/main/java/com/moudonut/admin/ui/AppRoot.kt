@@ -1,5 +1,6 @@
 package com.moudonut.admin.ui
 
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -7,6 +8,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material.icons.filled.Fastfood
@@ -120,17 +122,26 @@ private fun MainNav() {
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("หมู-บ้านโดนัท") },
+                title = {
+                    Text(
+                        "หมู-บ้านโดนัท",
+                        style = MaterialTheme.typography.titleLarge,
+                        fontWeight = FontWeight.Bold
+                    )
+                },
                 actions = {
-                    TextButton(onClick = {
-                        scope.launch {
-                            try {
-                                client.auth.signOut()
-                            } catch (_: Throwable) {
-                                // The session flow will return to login on its own.
+                    TextButton(
+                        onClick = {
+                            scope.launch {
+                                try {
+                                    client.auth.signOut()
+                                } catch (_: Throwable) {
+                                    // The session flow will return to login on its own.
+                                }
                             }
-                        }
-                    }) {
+                        },
+                        contentPadding = PaddingValues(horizontal = 8.dp)
+                    ) {
                         Text("ออกจากระบบ")
                     }
                 }

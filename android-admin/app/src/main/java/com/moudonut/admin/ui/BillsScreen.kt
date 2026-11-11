@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
@@ -73,6 +74,7 @@ fun BillsScreen(onOpen: (String) -> Unit) {
     }
 
     Scaffold(
+        contentWindowInsets = WindowInsets(0, 0, 0, 0),
         snackbarHost = { SnackbarHost(snackbar) },
         containerColor = MaterialTheme.colorScheme.background
     ) { inner ->
@@ -80,7 +82,7 @@ fun BillsScreen(onOpen: (String) -> Unit) {
             modifier = Modifier
                 .padding(inner)
                 .fillMaxSize()
-                .padding(16.dp)
+                .padding(12.dp)
         ) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -175,29 +177,41 @@ private fun BillCard(bill: BillRow, onClick: () -> Unit) {
         modifier = Modifier.fillMaxWidth(),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
     ) {
-        Column(Modifier.padding(16.dp)) {
+        Column(Modifier.padding(12.dp)) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                Text(bill.customerName, style = MaterialTheme.typography.titleLarge)
+                Text(
+                    bill.customerName,
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier
+                        .weight(1f)
+                        .padding(end = 8.dp),
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
                 Text(
                     formatMoney(bill.total),
-                    style = MaterialTheme.typography.titleLarge,
+                    style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold
                 )
             }
             Spacer(Modifier.height(4.dp))
             Text(
                 "${bill.itemCount} ชิ้น · เปิด ${formatTime(bill.openedAt)}",
-                style = MaterialTheme.typography.bodyMedium
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
             )
             if (bill.items.isNotEmpty()) {
                 Spacer(Modifier.height(4.dp))
                 Text(
                     bill.items.joinToString(" · ") { "${it.productName} x${it.qty}" },
                     style = MaterialTheme.typography.bodySmall,
-                    maxLines = 2,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    maxLines = 3,
                     overflow = TextOverflow.Ellipsis
                 )
             }

@@ -41,6 +41,9 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.size
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -78,6 +81,7 @@ fun CustomersScreen() {
     }
 
     Scaffold(
+        contentWindowInsets = WindowInsets(0, 0, 0, 0),
         snackbarHost = { SnackbarHost(snackbar) },
         containerColor = MaterialTheme.colorScheme.background
     ) { inner ->
@@ -85,7 +89,7 @@ fun CustomersScreen() {
             modifier = Modifier
                 .padding(inner)
                 .fillMaxSize()
-                .padding(16.dp)
+                .padding(12.dp)
         ) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -259,7 +263,7 @@ private fun CustomerCard(
     onDeleteCode: (AdminCode) -> Unit
 ) {
     Card(Modifier.fillMaxWidth()) {
-        Column(Modifier.padding(16.dp)) {
+        Column(Modifier.padding(12.dp)) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
@@ -271,19 +275,32 @@ private fun CustomerCard(
                     fontWeight = FontWeight.Bold,
                     modifier = Modifier.weight(1f)
                 )
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    IconButton(onClick = onEditCustomer, enabled = enabled) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(2.dp)
+                ) {
+                    IconButton(
+                        onClick = onEditCustomer,
+                        enabled = enabled,
+                        modifier = Modifier.size(36.dp)
+                    ) {
                         Icon(
                             Icons.Default.Edit,
                             contentDescription = "แก้ไขชื่อลูกค้า",
-                            tint = MaterialTheme.colorScheme.primary
+                            tint = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.size(18.dp)
                         )
                     }
-                    IconButton(onClick = onDeleteCustomer, enabled = enabled) {
+                    IconButton(
+                        onClick = onDeleteCustomer,
+                        enabled = enabled,
+                        modifier = Modifier.size(36.dp)
+                    ) {
                         Icon(
                             Icons.Default.Delete,
                             contentDescription = "ลบลูกค้า",
-                            tint = MaterialTheme.colorScheme.error
+                            tint = MaterialTheme.colorScheme.error,
+                            modifier = Modifier.size(18.dp)
                         )
                     }
                 }
@@ -301,35 +318,57 @@ private fun CustomerCard(
                         horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Column(Modifier.weight(1f)) {
+                        Column(
+                            modifier = Modifier
+                                .weight(1f)
+                                .padding(end = 4.dp)
+                        ) {
                             Text(
                                 code.code,
-                                style = MaterialTheme.typography.bodyLarge,
-                                fontWeight = FontWeight.Bold
+                                style = MaterialTheme.typography.titleMedium,
+                                fontWeight = FontWeight.Bold,
+                                maxLines = 1
                             )
                             Text(
                                 code.label ?: "ไม่มีป้ายกำกับ",
-                                style = MaterialTheme.typography.bodySmall
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis
                             )
                         }
-                        Row(verticalAlignment = Alignment.CenterVertically) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(2.dp)
+                        ) {
                             Switch(
                                 checked = code.isActive,
                                 onCheckedChange = { onToggle(code.code, it) },
-                                enabled = enabled
+                                enabled = enabled,
+                                modifier = Modifier.padding(end = 2.dp)
                             )
-                            IconButton(onClick = { onEditCode(code) }, enabled = enabled) {
+                            IconButton(
+                                onClick = { onEditCode(code) },
+                                enabled = enabled,
+                                modifier = Modifier.size(36.dp)
+                            ) {
                                 Icon(
                                     Icons.Default.Edit,
                                     contentDescription = "แก้ไขป้ายกำกับ",
-                                    tint = MaterialTheme.colorScheme.onSurfaceVariant
+                                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    modifier = Modifier.size(18.dp)
                                 )
                             }
-                            IconButton(onClick = { onDeleteCode(code) }, enabled = enabled) {
+                            IconButton(
+                                onClick = { onDeleteCode(code) },
+                                enabled = enabled,
+                                modifier = Modifier.size(36.dp)
+                            ) {
                                 Icon(
                                     Icons.Default.Delete,
                                     contentDescription = "ลบรหัสนี้",
-                                    tint = MaterialTheme.colorScheme.error
+                                    tint = MaterialTheme.colorScheme.error,
+                                    modifier = Modifier.size(18.dp)
                                 )
                             }
                         }

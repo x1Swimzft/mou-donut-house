@@ -41,6 +41,11 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.size
+import androidx.compose.material3.FilledTonalButton
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -76,6 +81,7 @@ fun SummaryScreen(
     }
 
     Scaffold(
+        contentWindowInsets = WindowInsets(0, 0, 0, 0),
         snackbarHost = { SnackbarHost(snackbar) },
         containerColor = MaterialTheme.colorScheme.background
     ) { inner ->
@@ -83,9 +89,9 @@ fun SummaryScreen(
             modifier = Modifier
                 .padding(inner)
                 .fillMaxSize()
-                .padding(16.dp)
+                .padding(12.dp)
         ) {
-            Text("สรุปรายวัน", style = MaterialTheme.typography.headlineSmall)
+            Text("สรุปรายวัน", style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
             Spacer(Modifier.height(8.dp))
 
             Row(
@@ -93,15 +99,36 @@ fun SummaryScreen(
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                TextButton(onClick = { vm.setDate(shiftDate(state.date, -1)) }) {
-                    Text("ก่อนหน้า")
+                TextButton(
+                    onClick = { vm.setDate(shiftDate(state.date, -1)) },
+                    contentPadding = PaddingValues(horizontal = 8.dp)
+                ) {
+                    Text("← ก่อนหน้า")
                 }
-                Text(state.date, style = MaterialTheme.typography.titleLarge)
-                TextButton(onClick = { vm.setDate(shiftDate(state.date, 1)) }) {
-                    Text("ถัดไป")
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(6.dp)
+                ) {
+                    Text(
+                        state.date,
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold
+                    )
+                    FilledTonalButton(
+                        onClick = { vm.setDate(todayBangkok()) },
+                        contentPadding = PaddingValues(horizontal = 8.dp, vertical = 0.dp),
+                        modifier = Modifier.height(28.dp)
+                    ) {
+                        Text("วันนี้", style = MaterialTheme.typography.labelSmall)
+                    }
+                }
+                TextButton(
+                    onClick = { vm.setDate(shiftDate(state.date, 1)) },
+                    contentPadding = PaddingValues(horizontal = 8.dp)
+                ) {
+                    Text("ถัดไป →")
                 }
             }
-            TextButton(onClick = { vm.setDate(todayBangkok()) }) { Text("วันนี้") }
 
             Spacer(Modifier.height(8.dp))
 
@@ -221,16 +248,20 @@ private fun ColumnScope.SummaryContent(
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
-        Column(Modifier.padding(16.dp)) {
+        Column(Modifier.padding(12.dp)) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Text("ปิดแล้ว", style = MaterialTheme.typography.bodyMedium)
+                Text(
+                    "ปิดแล้ว",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
                 Text(
                     "ดูรวมออเดอร์ทั้งหมด →",
-                    style = MaterialTheme.typography.labelLarge,
+                    style = MaterialTheme.typography.labelMedium,
                     color = MaterialTheme.colorScheme.primary,
                     fontWeight = FontWeight.Bold
                 )
@@ -336,15 +367,21 @@ private fun DayBillRow(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(12.dp),
+                .padding(horizontal = 12.dp, vertical = 10.dp),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Column(Modifier.weight(1f)) {
+            Column(
+                modifier = Modifier
+                    .weight(1f)
+                    .padding(end = 8.dp)
+            ) {
                 Text(
                     bill.customerName ?: "-",
                     style = MaterialTheme.typography.bodyLarge,
-                    fontWeight = FontWeight.Bold
+                    fontWeight = FontWeight.Bold,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
                 )
                 Text(
                     if (bill.isOpen) {
@@ -352,27 +389,35 @@ private fun DayBillRow(
                     } else {
                         "ปิดแล้ว · ${bill.orderCount} ออเดอร์วันนี้"
                     },
-                    style = MaterialTheme.typography.bodySmall
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
                 if (bill.spansDays) {
                     Text(
                         "ทั้งบิล ${formatMoney(bill.billTotal)}",
-                        style = MaterialTheme.typography.bodySmall
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
             }
-            Row(verticalAlignment = Alignment.CenterVertically) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(4.dp)
+            ) {
                 Text(
                     formatMoney(bill.dayTotal),
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold
                 )
-                Spacer(Modifier.width(8.dp))
-                IconButton(onClick = onDelete) {
+                IconButton(
+                    onClick = onDelete,
+                    modifier = Modifier.size(36.dp)
+                ) {
                     Icon(
                         Icons.Default.Delete,
                         contentDescription = "ลบออเดอร์ของ ${bill.customerName}",
-                        tint = MaterialTheme.colorScheme.error
+                        tint = MaterialTheme.colorScheme.error,
+                        modifier = Modifier.size(18.dp)
                     )
                 }
             }

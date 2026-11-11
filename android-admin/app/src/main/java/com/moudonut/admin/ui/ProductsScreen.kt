@@ -44,6 +44,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -72,6 +74,7 @@ fun ProductsScreen(vm: ProductsViewModel = viewModel()) {
     }
 
     Scaffold(
+        contentWindowInsets = WindowInsets(0, 0, 0, 0),
         snackbarHost = { SnackbarHost(snackbar) },
         containerColor = MaterialTheme.colorScheme.background
     ) { inner ->
@@ -79,7 +82,7 @@ fun ProductsScreen(vm: ProductsViewModel = viewModel()) {
             modifier = Modifier
                 .padding(inner)
                 .fillMaxSize()
-                .padding(16.dp)
+                .padding(12.dp)
         ) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -202,26 +205,35 @@ private fun ProductRowCard(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 16.dp, vertical = 12.dp),
+                .padding(horizontal = 12.dp, vertical = 8.dp),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Column(modifier = Modifier.weight(1f)) {
+            Column(
+                modifier = Modifier
+                    .weight(1f)
+                    .padding(end = 4.dp)
+            ) {
                 Text(
                     text = product.name,
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.SemiBold,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
                     color = if (product.isAvailable) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
                 )
                 Spacer(Modifier.height(2.dp))
-                Row(verticalAlignment = Alignment.CenterVertically) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(4.dp)
+                ) {
                     Text(
                         text = formatMoney(product.price),
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                     Text(
-                        text = " • ",
+                        text = "•",
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                     Text(
@@ -230,13 +242,15 @@ private fun ProductRowCard(
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                     Text(
-                        text = " • ",
+                        text = "•",
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                     Text(
                         text = if (product.isAvailable) "เปิดขาย" else "หมดชั่วคราว",
                         style = MaterialTheme.typography.labelMedium,
                         fontWeight = FontWeight.Medium,
+                        maxLines = 1,
+                        softWrap = false,
                         color = if (product.isAvailable) {
                             MaterialTheme.colorScheme.primary
                         } else {
@@ -246,13 +260,20 @@ private fun ProductRowCard(
                 }
             }
 
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                IconButton(onClick = onEditPrice, enabled = !isUpdating) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(4.dp)
+            ) {
+                IconButton(
+                    onClick = onEditPrice,
+                    enabled = !isUpdating,
+                    modifier = Modifier.size(36.dp)
+                ) {
                     Icon(
                         Icons.Default.Edit,
                         contentDescription = "แก้ไขราคา",
                         tint = MaterialTheme.colorScheme.primary,
-                        modifier = Modifier.size(20.dp)
+                        modifier = Modifier.size(18.dp)
                     )
                 }
 
