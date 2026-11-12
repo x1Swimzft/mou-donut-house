@@ -7,15 +7,129 @@ const CART_NOTE_KEY = "mdh_cart_note_v1";
 const ORDER_KEY = "mdh_last_order_v1";
 const NOTICE_KEY = "mdh_notice_v1";
 
-function hasWindow() {
+// In-memory store (RAM) - resilient against Safari iOS 15 Private Browsing QuotaExceededError
+// and strict cross-site / cookie blocking.
+const memoryStore = new Map<string, string>();
+
+function hasWindow(): boolean {
   return typeof window !== "undefined";
 }
 
-function readJson<T>(key: string, fallback: T): T {
-  if (!hasWindow()) return fallback;
+function hasDocument(): boolean {
+  return typeof document !== "undefined";
+}
+
+function getCookie(name: string): string {
+  if (!hasDocument()) return "";
   try {
-    const raw = window.localStorage.getItem(key);
-    if (!raw) return fallback;
+    const encodedName = encodeURIComponent(name);
+    const cookies = document.cookie.split(";");
+    for (const c of cookies) {
+      const trimmed = c.trim();
+      if (trimmed.startsWith(encodedName + "=")) {
+        return decodeURIComponent(trimmed.substring(encodedName.length + 1));
+      }
+    }
+  } catch {
+    // Cookie reading might throw in sandboxed environments
+  }
+  return "";
+}
+
+function setCookie(name: string, value: string, days = 365): void {
+  if (!hasDocument()) return;
+  try {
+    const expires = new Date(Date.now() + days * 864e5).toUTCString();
+    document.cookie = `${encodeURIComponent(name)}=${encodeURIComponent(value)}; expires=${expires}; path=/; SameSite=Lax`;
+  } catch {
+    // Cookie writing might throw if cookies are completely disabled
+  }
+}
+
+function deleteCookie(name: string): void {
+  if (!hasDocument()) return;
+  try {
+    document.cookie = `${encodeURIComponent(name)}=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/; SameSite=Lax`;
+  } catch {
+    // ignore
+  }
+}
+
+function getFromLocalStorage(key: string): string {
+  if (!hasWindow()) return "";
+  try {
+    return window.localStorage.getItem(key) ?? "";
+  } catch {
+    // In Safari iOS 15 Private Browsing or with blocked cookies, accessing localStorage can throw SecurityError
+    return "";
+  }
+}
+
+function setToLocalStorage(key: string, value: string): void {
+  if (!hasWindow()) return;
+  try {
+    window.localStorage.setItem(key, value);
+  } catch {
+    // Throws QuotaExceededError in iOS Safari Private Browsing mode
+  }
+}
+
+function removeFromLocalStorage(key: string): void {
+  if (!hasWindow()) return;
+  try {
+    window.localStorage.removeItem(key);
+  } catch {
+    // ignore
+  }
+}
+
+// Multi-tier storage: RAM -> localStorage -> Cookie
+function readStorageItem(key: string): string {
+  // 1. In-memory check (fastest, guaranteed working within SPA session)
+  const mem = memoryStore.get(key);
+  if (mem) return mem;
+
+  // 2. localStorage check
+  const local = getFromLocalStorage(key);
+  if (local) {
+    memoryStore.set(key, local);
+    return local;
+  }
+
+  // 3. Cookie check (persists across navigation even when localStorage is 0-quota in Safari Private Browsing)
+  const cookie = getCookie(key);
+  if (cookie) {
+    memoryStore.set(key, cookie);
+    setToLocalStorage(key, cookie);
+    return cookie;
+  }
+
+  return "";
+}
+
+function writeStorageItem(key: string, value: string, persistCookie = true): void {
+  // 1. Save in RAM
+  memoryStore.set(key, value);
+
+  // 2. Save in localStorage (safely)
+  setToLocalStorage(key, value);
+
+  // 3. Save in Cookie (for iOS 15 Safari Private Browsing resilience)
+  if (persistCookie) {
+    setCookie(key, value);
+  }
+}
+
+function deleteStorageItem(key: string): void {
+  memoryStore.delete(key);
+  removeFromLocalStorage(key);
+  deleteCookie(key);
+}
+
+function readJson<T>(key: string, fallback: T): T {
+  const raw = readStorageItem(key);
+  if (!raw) return fallback;
+  try {
     return JSON.parse(raw) as T;
   } catch {
     return fallback;
@@ -23,38 +137,32 @@ function readJson<T>(key: string, fallback: T): T {
 }
 
 function writeJson(key: string, value: unknown) {
-  if (!hasWindow()) return;
   try {
-    window.localStorage.setItem(key, JSON.stringify(value));
+    const raw = JSON.stringify(value);
+    writeStorageItem(key, raw, true);
   } catch {
-    // Storage can be unavailable in private mode; the UI still works in memory
-    // for the current page, but persistence is not guaranteed.
+    // ignore serialization failure
   }
 }
 
 export function getCode(): string {
-  if (!hasWindow()) return "";
-  return window.localStorage.getItem(CODE_KEY) ?? "";
+  return readStorageItem(CODE_KEY);
 }
 
 export function setCode(code: string) {
-  if (!hasWindow()) return;
-  window.localStorage.setItem(CODE_KEY, code);
+  writeStorageItem(CODE_KEY, code, true);
 }
 
 export function clearCode() {
-  if (!hasWindow()) return;
-  window.localStorage.removeItem(CODE_KEY);
+  deleteStorageItem(CODE_KEY);
 }
 
 export function getCustomerName(): string {
-  if (!hasWindow()) return "";
-  return window.localStorage.getItem(NAME_KEY) ?? "";
+  return readStorageItem(NAME_KEY);
 }
 
 export function setCustomerName(name: string) {
-  if (!hasWindow()) return;
-  window.localStorage.setItem(NAME_KEY, name);
+  writeStorageItem(NAME_KEY, name, true);
 }
 
 export function getCart(): CartLine[] {
@@ -81,24 +189,14 @@ export function setCart(cart: CartLine[]) {
 }
 
 export function getCartNote(): string {
-  if (!hasWindow()) return "";
-  try {
-    return window.localStorage.getItem(CART_NOTE_KEY) ?? "";
-  } catch {
-    return "";
-  }
+  return readStorageItem(CART_NOTE_KEY);
 }
 
 export function setCartNote(note: string) {
-  if (!hasWindow()) return;
-  try {
-    if (note) {
-      window.localStorage.setItem(CART_NOTE_KEY, note);
-    } else {
-      window.localStorage.removeItem(CART_NOTE_KEY);
-    }
-  } catch {
-    // no-op
+  if (note) {
+    writeStorageItem(CART_NOTE_KEY, note, true);
+  } else {
+    deleteStorageItem(CART_NOTE_KEY);
   }
 }
 
@@ -120,6 +218,9 @@ export function setLastOrder(order: LastOrder) {
 }
 
 export function getNotice(): string {
+  const mem = memoryStore.get(NOTICE_KEY);
+  if (mem) return mem;
+
   if (!hasWindow()) return "";
   try {
     return window.sessionStorage.getItem(NOTICE_KEY) ?? "";
@@ -129,19 +230,21 @@ export function getNotice(): string {
 }
 
 export function setNotice(message: string) {
+  memoryStore.set(NOTICE_KEY, message);
   if (!hasWindow()) return;
   try {
     window.sessionStorage.setItem(NOTICE_KEY, message);
   } catch {
-    // no-op
+    // no-op in private mode
   }
 }
 
 export function clearNotice() {
+  memoryStore.delete(NOTICE_KEY);
   if (!hasWindow()) return;
   try {
     window.sessionStorage.removeItem(NOTICE_KEY);
   } catch {
-    // no-op
+    // no-op in private mode
   }
 }

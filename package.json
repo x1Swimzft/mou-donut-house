@@ -6,7 +6,7 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "test": "tsx scripts/test-cart.ts"
+    "test": "tsx scripts/test-cart.ts && tsx scripts/test-storage.ts"
   },
   "dependencies": {
     "@supabase/supabase-js": "2.119.0",

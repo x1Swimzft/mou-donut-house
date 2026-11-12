@@ -43,19 +43,23 @@ export default function LoginPage() {
 
     let cancelled = false;
     void (async () => {
-      const result = await verifyLogin(storedName, storedCode);
-      if (cancelled || result.ok) return;
+      try {
+        const result = await verifyLogin(storedName, storedCode);
+        if (cancelled || result.ok) return;
 
-      if (result.code === "ZZ001" || result.code === "ZZ002") {
-        clearCode();
-        setCustomerName("");
-        setCode("");
-        setName("");
-        setSaved(false);
-        setNotice(messageForCode(result.code) ?? GENERIC_VERIFY_ERROR);
-        return;
+        if (result.code === "ZZ001" || result.code === "ZZ002") {
+          clearCode();
+          setCustomerName("");
+          setCode("");
+          setName("");
+          setSaved(false);
+          setNotice(messageForCode(result.code) ?? GENERIC_VERIFY_ERROR);
+          return;
+        }
+        setNotice(GENERIC_VERIFY_ERROR);
+      } catch {
+        // Network hiccup on initial check; ignore to let user manually click or retry
       }
-      setNotice(GENERIC_VERIFY_ERROR);
     })();
 
     return () => {
@@ -81,23 +85,29 @@ export default function LoginPage() {
 
     setChecking(true);
     setNotice(null);
-    const result = await verifyLogin(valueName, valueCode);
-    if (result.ok) {
-      saveCode(valueCode);
-      setCustomerName(result.customerName);
-      router.push("/menu");
-      return;
-    }
 
-    if (result.code === "ZZ001" || result.code === "ZZ002") {
-      clearCode();
-      setCustomerName("");
-      setSaved(false);
-      setNotice(messageForCode(result.code) ?? GENERIC_VERIFY_ERROR);
-    } else {
+    try {
+      const result = await verifyLogin(valueName, valueCode);
+      if (result.ok) {
+        saveCode(valueCode);
+        setCustomerName(result.customerName);
+        router.push("/menu");
+        return;
+      }
+
+      if (result.code === "ZZ001" || result.code === "ZZ002") {
+        clearCode();
+        setCustomerName("");
+        setSaved(false);
+        setNotice(messageForCode(result.code) ?? GENERIC_VERIFY_ERROR);
+      } else {
+        setNotice(GENERIC_VERIFY_ERROR);
+      }
+      setChecking(false);
+    } catch {
       setNotice(GENERIC_VERIFY_ERROR);
+      setChecking(false);
     }
-    setChecking(false);
   }
 
   return (
