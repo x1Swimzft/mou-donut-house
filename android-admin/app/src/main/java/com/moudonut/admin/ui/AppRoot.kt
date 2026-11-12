@@ -45,9 +45,11 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.moudonut.admin.data.BillsRepository
+import com.moudonut.admin.data.CredentialStore
 import com.moudonut.admin.data.SupabaseHolder
 import com.moudonut.admin.data.toThaiMessage
 import io.github.jan.supabase.auth.auth
+import io.github.jan.supabase.auth.providers.builtin.Email
 import io.github.jan.supabase.auth.status.SessionStatus
 import kotlinx.coroutines.TimeoutCancellationException
 import kotlinx.coroutines.launch
@@ -62,13 +64,35 @@ fun AppRoot() {
     }
 
     val client = SupabaseHolder.client
+    val context = LocalContext.current
     var loggedIn by remember { mutableStateOf(client.auth.currentSessionOrNull() != null) }
+    var autoLoggingIn by remember { mutableStateOf(false) }
     var adminChecked by remember { mutableStateOf(false) }
     var adminError by remember { mutableStateOf<String?>(null) }
 
     LaunchedEffect(Unit) {
         client.auth.sessionStatus.collect { status ->
             loggedIn = status is SessionStatus.Authenticated
+        }
+    }
+
+    // Auto-login from saved credentials if not authenticated yet
+    LaunchedEffect(Unit) {
+        if (!loggedIn && client.auth.currentSessionOrNull() == null) {
+            val creds = CredentialStore.load(context)
+            if (creds != null) {
+                autoLoggingIn = true
+                try {
+                    client.auth.signInWith(Email) {
+                        this.email = creds.first
+                        this.password = creds.second
+                    }
+                } catch (t: Throwable) {
+                    adminError = t.toThaiMessage()
+                } finally {
+                    autoLoggingIn = false
+                }
+            }
         }
     }
 
@@ -97,7 +121,6 @@ fun AppRoot() {
         }
     }
 
-    val context = LocalContext.current
     LaunchedEffect(loggedIn, adminChecked) {
         if (loggedIn && adminChecked) {
             try {
@@ -106,17 +129,12 @@ fun AppRoot() {
             } catch (_: Throwable) {
                 // Background start restriction fallback
             }
-        } else if (!loggedIn) {
-            try {
-                val serviceIntent = Intent(context, OrderNotificationService::class.java)
-                context.stopService(serviceIntent)
-            } catch (_: Throwable) {}
         }
     }
 
     when {
         loggedIn && adminChecked -> MainNav()
-        loggedIn -> Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+        autoLoggingIn || loggedIn -> Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
             CircularProgressIndicator()
         }
         else -> LoginScreen(initialError = adminError)
@@ -157,6 +175,7 @@ private fun MainNav() {
                             scope.launch {
                                 try {
                                     context.stopService(Intent(context, OrderNotificationService::class.java))
+                                    CredentialStore.clear(context)
                                     client.auth.signOut()
                                 } catch (_: Throwable) {
                                     // The session flow will return to login on its own.

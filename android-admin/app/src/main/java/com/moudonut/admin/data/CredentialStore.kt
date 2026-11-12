@@ -57,7 +57,6 @@ object CredentialStore {
             if (email.isBlank() || password.isBlank()) null else email to password
         }.getOrNull()
 
-        if (result == null) clear(context)
         return result
     }
 
