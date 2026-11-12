@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Surface
@@ -41,6 +42,7 @@ import com.moudonut.admin.util.PaperMenu
 import com.moudonut.admin.util.formatDateTime
 import com.moudonut.admin.util.formatMoney
 import com.moudonut.admin.util.formatTime
+import com.moudonut.admin.util.shortOrderId
 
 @Composable
 fun BillDetailScreen(id: String, onBack: () -> Unit) {
@@ -178,6 +180,32 @@ fun BillDetailScreen(id: String, onBack: () -> Unit) {
                                             style = MaterialTheme.typography.titleMedium,
                                             fontWeight = FontWeight.Bold
                                         )
+                                    }
+                                    Spacer(Modifier.height(4.dp))
+                                    SelectionContainer {
+                                        Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                                            Row(
+                                                verticalAlignment = Alignment.CenterVertically,
+                                                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                                            ) {
+                                                Text(
+                                                    "เลขอ้างอิง",
+                                                    style = MaterialTheme.typography.bodySmall,
+                                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                                )
+                                                Text(
+                                                    shortOrderId(order.id),
+                                                    style = MaterialTheme.typography.titleMedium,
+                                                    fontWeight = FontWeight.Bold,
+                                                    color = MaterialTheme.colorScheme.primary
+                                                )
+                                            }
+                                            Text(
+                                                "รหัสออเดอร์เต็ม: ${order.id}",
+                                                style = MaterialTheme.typography.bodySmall,
+                                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                                            )
+                                        }
                                     }
                                     if (!order.note.isNullOrBlank()) {
                                         Spacer(Modifier.height(6.dp))

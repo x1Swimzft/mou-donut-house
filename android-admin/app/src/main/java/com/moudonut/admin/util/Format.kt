@@ -14,6 +14,8 @@ private val dateTimeFormat = DateTimeFormatter.ofPattern("d MMM HH:mm", Locale("
 
 fun formatMoney(value: Double): String = "${moneyFormat.format(value)} บาท"
 
+fun shortOrderId(orderId: String): String = orderId.take(8).uppercase(Locale.ROOT)
+
 fun formatTime(iso: String?): String =
     iso?.let {
         runCatching {
