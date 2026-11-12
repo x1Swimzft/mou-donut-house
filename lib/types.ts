@@ -14,6 +14,7 @@ export type CartLine = {
 export type LastOrder = {
   order_id: string;
   total: number;
+  note: string | null;
 };
 
 export type CustomerBillItem = {

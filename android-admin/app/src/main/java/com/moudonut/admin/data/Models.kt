@@ -134,6 +134,7 @@ data class OrderRow(
     val id: String,
     @SerialName("created_at") val createdAt: String,
     val total: Double,
+    val note: String? = null,
     @SerialName("order_items") val items: List<OrderItemRow> = emptyList()
 )
 

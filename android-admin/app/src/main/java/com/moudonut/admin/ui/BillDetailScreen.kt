@@ -179,6 +179,21 @@ fun BillDetailScreen(id: String, onBack: () -> Unit) {
                                             fontWeight = FontWeight.Bold
                                         )
                                     }
+                                    if (!order.note.isNullOrBlank()) {
+                                        Spacer(Modifier.height(6.dp))
+                                        Surface(
+                                            modifier = Modifier.fillMaxWidth(),
+                                            color = MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.6f),
+                                            shape = MaterialTheme.shapes.small
+                                        ) {
+                                            Text(
+                                                "📝 ถึงร้าน: ${order.note}",
+                                                modifier = Modifier.padding(8.dp),
+                                                style = MaterialTheme.typography.bodyMedium,
+                                                fontWeight = FontWeight.Medium
+                                            )
+                                        }
+                                    }
                                     Spacer(Modifier.height(6.dp))
                                     val sortedItems = remember(order.items) {
                                         order.items.sortedWith(

@@ -75,19 +75,48 @@ class ModelsTest {
                 "id": "o1",
                 "created_at": "2026-11-10T10:19:00+07:00",
                 "total": 10.50,
+                "note": "ไม่ใส่ถั่ว รับตอน 15:00",
                 "order_items": [
                   {"product_name": "ไส้กรอก", "qty": 3, "unit_price": 3.50}
+                ]
+              },
+              {
+                "id": "o2",
+                "created_at": "2026-11-10T11:00:00+07:00",
+                "total": 3.50,
+                "note": null,
+                "order_items": [
+                  {"product_name": "หมูหยอง", "qty": 1, "unit_price": 3.50}
                 ]
               }
             ]
         """.trimIndent()
 
         val orders = Json.decodeFromString<List<OrderRow>>(json)
-        val order = orders.single()
+        val order = orders.first()
 
         assertEquals(10.5, order.total, 0.001)
+        assertEquals("ไม่ใส่ถั่ว รับตอน 15:00", order.note)
         assertEquals("ไส้กรอก", order.items.single().productName)
         assertEquals(3, order.items.single().qty)
+        assertEquals(null, orders.last().note)
+    }
+
+    @Test
+    fun billOrdersDecodeWithoutNoteField() {
+        val json = """
+            [
+              {
+                "id": "o1",
+                "created_at": "2026-11-10T10:19:00+07:00",
+                "total": 10.50,
+                "order_items": []
+              }
+            ]
+        """.trimIndent()
+
+        val orders = Json.decodeFromString<List<OrderRow>>(json)
+        assertEquals(null, orders.single().note)
     }
 
     @Test

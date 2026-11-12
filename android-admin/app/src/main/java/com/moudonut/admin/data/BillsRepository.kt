@@ -145,7 +145,7 @@ class BillsRepository : SummarySource, ProductsSource {
 
     suspend fun billOrders(billId: String): List<OrderRow> =
         client.from("orders")
-            .select(Columns.raw("id,created_at,total,order_items(product_name,qty,unit_price)")) {
+            .select(Columns.raw("id,created_at,total,note,order_items(product_name,qty,unit_price)")) {
                 filter { eq("bill_id", billId) }
                 order("created_at", Order.ASCENDING)
             }.decodeList<OrderRow>()

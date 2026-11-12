@@ -24,6 +24,7 @@ const mockStorage = {
 
 // Now import cart modules
 import { addToCart, changeQty, setLineQty, removeLine, countItems, estimateTotal } from "../lib/cart";
+import { clearCartNote, getCartNote, getLastOrder, setLastOrder, setCartNote } from "../lib/storage";
 import type { Product } from "../lib/types";
 
 const mockProducts: Product[] = [
@@ -88,5 +89,23 @@ assert.equal(cart.find((c) => c.product_id === "p2"), undefined, "p2 should be r
 assert.equal(cart.length, 1);
 assert.equal(cart[0].product_id, "p3");
 console.log("✓ Zero & negative handling passed (removes line clean)");
+
+console.log("=== 6. Testing cart note draft ===");
+assert.equal(getCartNote(), "");
+setCartNote("ไม่ใส่ถั่ว");
+assert.equal(getCartNote(), "ไม่ใส่ถั่ว");
+setCartNote("");
+assert.equal(getCartNote(), "");
+setCartNote("แยกถุง");
+clearCartNote();
+assert.equal(getCartNote(), "");
+console.log("✓ cart note draft passed");
+
+console.log("=== 7. Testing last order note ===");
+setLastOrder({ order_id: "abc", total: 3.5, note: "รับตอน 15:00" });
+assert.equal(getLastOrder()?.note, "รับตอน 15:00");
+setLastOrder({ order_id: "abc", total: 3.5, note: null });
+assert.equal(getLastOrder()?.note, null);
+console.log("✓ last order note passed");
 
 console.log("\nALL CART TESTS PASSED SUCCESSFULLY! ✓");

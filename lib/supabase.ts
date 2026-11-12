@@ -78,15 +78,18 @@ export async function listMenu(code: string): Promise<MenuResult> {
 
 export async function createOrder(
   code: string,
-  items: { product_id: string; qty: number }[]
+  items: { product_id: string; qty: number }[],
+  note?: string | null
 ): Promise<OrderResult> {
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), 10000);
+  const trimmedNote = note?.trim() ?? "";
   try {
     const { data, error } = await getClient()
       .rpc("create_order", {
         p_code: code,
-        p_items: items
+        p_items: items,
+        p_note: trimmedNote.length > 0 ? trimmedNote : null
       })
       .abortSignal(controller.signal);
     if (error) return { ok: false, code: error.code ?? null };

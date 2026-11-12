@@ -3,6 +3,7 @@ import type { CartLine, LastOrder } from "./types";
 const CODE_KEY = "mdh_code";
 const NAME_KEY = "mdh_customer_name";
 const CART_KEY = "cart_v1";
+const CART_NOTE_KEY = "mdh_cart_note_v1";
 const ORDER_KEY = "mdh_last_order_v1";
 const NOTICE_KEY = "mdh_notice_v1";
 
@@ -79,12 +80,39 @@ export function setCart(cart: CartLine[]) {
   }
 }
 
+export function getCartNote(): string {
+  if (!hasWindow()) return "";
+  try {
+    return window.localStorage.getItem(CART_NOTE_KEY) ?? "";
+  } catch {
+    return "";
+  }
+}
+
+export function setCartNote(note: string) {
+  if (!hasWindow()) return;
+  try {
+    if (note) {
+      window.localStorage.setItem(CART_NOTE_KEY, note);
+    } else {
+      window.localStorage.removeItem(CART_NOTE_KEY);
+    }
+  } catch {
+    // no-op
+  }
+}
+
+export function clearCartNote() {
+  setCartNote("");
+}
+
 export function getLastOrder(): LastOrder | null {
   const value = readJson<unknown>(ORDER_KEY, null);
   if (!value || typeof value !== "object") return null;
-  const row = value as { order_id?: unknown; total?: unknown };
+  const row = value as { order_id?: unknown; total?: unknown; note?: unknown };
   if (typeof row.order_id !== "string" || !Number.isFinite(Number(row.total))) return null;
-  return { order_id: row.order_id, total: Number(row.total) };
+  const note = typeof row.note === "string" && row.note.trim() ? row.note : null;
+  return { order_id: row.order_id, total: Number(row.total), note };
 }
 
 export function setLastOrder(order: LastOrder) {

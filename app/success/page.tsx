@@ -80,6 +80,13 @@ export default function SuccessPage() {
                 </button>
               </div>
 
+              {order.note ? (
+                <div className="order-note">
+                  <span className="order-note-label">ข้อความถึงร้าน</span>
+                  <p className="order-note-text">{order.note}</p>
+                </div>
+              ) : null}
+
               <div className="total-line">
                 <span>ยอดเงินที่ต้องชำระ</span>
                 <span className="order-total-price">{formatMoney(order.total)}</span>

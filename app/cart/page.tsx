@@ -17,11 +17,14 @@ import {
 import { createOrder, listMenu, subscribeProducts } from "@/lib/supabase";
 import {
   clearCode,
+  clearCartNote,
   clearNotice,
-  getCode,
   getCart,
+  getCartNote,
+  getCode,
   getNotice,
   setCart as saveCart,
+  setCartNote,
   setLastOrder,
   setNotice as saveNotice
 } from "@/lib/storage";
@@ -35,6 +38,7 @@ export default function CartPage() {
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [notice, setNotice] = useState<string | null>(null);
+  const [note, setNote] = useState("");
 
   async function loadCart(currentCart: CartLine[], currentCode: string) {
     if (currentCart.length === 0) {
@@ -69,6 +73,7 @@ export default function CartPage() {
     setCode(storedCode);
     const initialCart = getCart();
     setCartState(initialCart);
+    setNote(getCartNote());
     const message = getNotice();
     if (message) {
       setNotice(message);
@@ -140,12 +145,19 @@ export default function CartPage() {
     setSubmitting(true);
     setNotice(null);
     const items = cart.map(({ product_id, qty }) => ({ product_id, qty }));
-    const result = await createOrder(code, items);
+    const trimmedNote = note.trim();
+    const result = await createOrder(code, items, trimmedNote);
 
     if (result.ok) {
       saveCart([]);
       setCartState([]);
-      setLastOrder({ order_id: result.orderId, total: result.total });
+      clearCartNote();
+      setNote("");
+      setLastOrder({
+        order_id: result.orderId,
+        total: result.total,
+        note: trimmedNote.length > 0 ? trimmedNote : null
+      });
       router.push("/success");
       return;
     }
@@ -197,6 +209,12 @@ export default function CartPage() {
 
     if (result.code === "ZZ004" || result.code === "ZZ005") {
       setNotice(ERROR_MESSAGES[result.code]);
+      setSubmitting(false);
+      return;
+    }
+
+    if (result.code === "ZZ014") {
+      setNotice(ERROR_MESSAGES.ZZ014);
       setSubmitting(false);
       return;
     }
@@ -350,6 +368,33 @@ export default function CartPage() {
                   </div>
                   <p>สั่งล่วงหน้าผ่านเว็บ แล้วมาชำระเงินสดหรือสแกนจ่ายที่ร้านตอนรับของได้เลย</p>
                 </section>
+
+                <div className="note-field">
+                  <label className="field-label" htmlFor="order-note">
+                    ฝากข้อความถึงร้าน (ไม่บังคับ)
+                  </label>
+                  <textarea
+                    id="order-note"
+                    className="note-input"
+                    value={note}
+                    maxLength={200}
+                    rows={3}
+                    placeholder="เช่น ไม่ใส่ถั่ว, รับตอน 15:00, แยกถุง"
+                    onChange={(event) => {
+                      setNote(event.target.value);
+                      setCartNote(event.target.value);
+                    }}
+                    aria-describedby="order-note-help order-note-count"
+                  />
+                  <div className="note-meta">
+                    <p id="order-note-help" className="help">
+                      ข้อความนี้จะส่งให้ร้านพร้อมออเดอร์นี้
+                    </p>
+                    <span id="order-note-count" className="note-counter">
+                      {note.length}/200
+                    </span>
+                  </div>
+                </div>
 
                 <div className="confirm-stack">
                   {lines.some((line) => line.product && !line.product.is_available) ? (
