@@ -1,5 +1,9 @@
 package com.moudonut.admin.ui
 
+import android.content.Intent
+import androidx.compose.ui.platform.LocalContext
+import androidx.core.content.ContextCompat
+import com.moudonut.admin.service.OrderNotificationService
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -93,6 +97,23 @@ fun AppRoot() {
         }
     }
 
+    val context = LocalContext.current
+    LaunchedEffect(loggedIn, adminChecked) {
+        if (loggedIn && adminChecked) {
+            try {
+                val serviceIntent = Intent(context, OrderNotificationService::class.java)
+                ContextCompat.startForegroundService(context, serviceIntent)
+            } catch (_: Throwable) {
+                // Background start restriction fallback
+            }
+        } else if (!loggedIn) {
+            try {
+                val serviceIntent = Intent(context, OrderNotificationService::class.java)
+                context.stopService(serviceIntent)
+            } catch (_: Throwable) {}
+        }
+    }
+
     when {
         loggedIn && adminChecked -> MainNav()
         loggedIn -> Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
@@ -107,6 +128,7 @@ fun AppRoot() {
 private fun MainNav() {
     val nav = rememberNavController()
     val client = SupabaseHolder.client
+    val context = LocalContext.current
     val scope = rememberCoroutineScope()
     val backStackEntry by nav.currentBackStackEntryAsState()
     val current = backStackEntry?.destination
@@ -134,6 +156,7 @@ private fun MainNav() {
                         onClick = {
                             scope.launch {
                                 try {
+                                    context.stopService(Intent(context, OrderNotificationService::class.java))
                                     client.auth.signOut()
                                 } catch (_: Throwable) {
                                     // The session flow will return to login on its own.

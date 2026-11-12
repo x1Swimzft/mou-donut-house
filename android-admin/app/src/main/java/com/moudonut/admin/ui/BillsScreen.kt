@@ -84,7 +84,6 @@ fun BillsScreen(onOpen: (String) -> Unit) {
         vm.events.collect { event ->
             when (event) {
                 BillsEvent.NewOrder -> {
-                    NotificationNotifier.notifyNewOrder(context)
                     snackbar.showSnackbar("มีออเดอร์ใหม่เข้ามา!")
                 }
             }
